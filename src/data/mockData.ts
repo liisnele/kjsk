@@ -148,13 +148,24 @@ export function generateTimeSlots(date: string, centerId: string, sportId: strin
   const relevantCourts = center.courts.filter((c) => c.sportId === sportId);
   const seed = date.split("-").reduce((a, b) => a + parseInt(b), 0) + centerId.length + sportId.length;
 
+  let hasAvailableSlot = false;
+
   for (let hour = 8; hour <= 21; hour++) {
     const time = `${hour.toString().padStart(2, "0")}:00`;
     for (const court of relevantCourts) {
       const hash = (seed * (hour + 1) * (court.id.charCodeAt(1) + 1)) % 10;
-      slots.push({ time, available: hash > 3, courtId: court.id });
+      // Ensure at least the first time slot is always available for each court
+      const available = hour === 8 || hash > 2;
+      slots.push({ time, available, courtId: court.id });
+      if (available) hasAvailableSlot = true;
     }
   }
+  
+  // If no slots were made available, make the first one available
+  if (!hasAvailableSlot && slots.length > 0) {
+    slots[0].available = true;
+  }
+  
   return slots;
 }
 

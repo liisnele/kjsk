@@ -139,7 +139,8 @@ export default function PlayTogetherPage() {
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", phone: "" });
   const [hoveredProgressBar, setHoveredProgressBar] = useState<string | null>(null);
   const [myRegistrations, setMyRegistrations] = useState<{ [gameId: string]: string }>({});
-  const [waitingList, setWaitingList] = useState<{ [gameId: string]: string }>({});
+  const [waitingList, setWaitingList] = useState<{ [gameId: string]: string[] }>({});
+  const [myWaitingListEntries, setMyWaitingListEntries] = useState<{ [gameId: string]: string }>({});
 
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -170,14 +171,38 @@ export default function PlayTogetherPage() {
     const playerName = myRegistrations[gameId];
     if (!playerName) return;
     
+    // Check if there's someone on the waitlist to promote
+    const waitlistForGame = waitingList[gameId];
+    let promotedPlayer: string | null = null;
+    
+    if (waitlistForGame && waitlistForGame.length > 0) {
+      promotedPlayer = waitlistForGame[0];
+    }
+    
+    // Update games and optionally promote from waitlist
     setGames(games.map((g) =>
       g.id === gameId
         ? { 
             ...g, 
-            registeredPlayers: g.registeredPlayers.filter((p) => p.name !== playerName)
+            registeredPlayers: [
+              ...g.registeredPlayers.filter((p) => p.name !== playerName),
+              ...(promotedPlayer ? [{ name: promotedPlayer }] : [])
+            ]
           }
         : g
     ));
+    
+    // Update waitlist if someone was promoted
+    if (promotedPlayer && waitlistForGame) {
+      const updatedWaitlist = waitlistForGame.slice(1);
+      if (updatedWaitlist.length > 0) {
+        setWaitingList({ ...waitingList, [gameId]: updatedWaitlist });
+      } else {
+        const newWaitingList = { ...waitingList };
+        delete newWaitingList[gameId];
+        setWaitingList(newWaitingList);
+      }
+    }
     
     // Remove from myRegistrations
     const updatedRegistrations = { ...myRegistrations };
@@ -187,14 +212,34 @@ export default function PlayTogetherPage() {
 
   // Handle waiting list registration
   const handleWaitingListRegister = (gameId: string, playerName: string) => {
-    setWaitingList({ ...waitingList, [gameId]: playerName });
+    const currentList = waitingList[gameId] || [];
+    setWaitingList({ ...waitingList, [gameId]: [...currentList, playerName] });
+    // Track this as my waitinglist entry
+    setMyWaitingListEntries({ ...myWaitingListEntries, [gameId]: playerName });
   };
 
   // Handle waiting list cancellation
-  const handleWaitingListCancel = (gameId: string) => {
-    const updatedWaitingList = { ...waitingList };
-    delete updatedWaitingList[gameId];
-    setWaitingList(updatedWaitingList);
+  const handleWaitingListCancel = (gameId: string, playerName?: string) => {
+    if (playerName && waitingList[gameId]) {
+      // Remove specific player from waitinglist
+      const updatedList = waitingList[gameId].filter((p) => p !== playerName);
+      if (updatedList.length > 0) {
+        setWaitingList({ ...waitingList, [gameId]: updatedList });
+      } else {
+        const updatedWaitingList = { ...waitingList };
+        delete updatedWaitingList[gameId];
+        setWaitingList(updatedWaitingList);
+      }
+    } else {
+      // Fall back to removing entire game entry
+      const updatedWaitingList = { ...waitingList };
+      delete updatedWaitingList[gameId];
+      setWaitingList(updatedWaitingList);
+    }
+    // Remove from myWaitingListEntries
+    const updatedMyList = { ...myWaitingListEntries };
+    delete updatedMyList[gameId];
+    setMyWaitingListEntries(updatedMyList);
   };
 
   const levelLabels: Record<SkillLevel, { et: string; en: string }> = {
@@ -563,6 +608,12 @@ export default function PlayTogetherPage() {
                               </div>
                             )}
                           </div>
+                          {/* Waitlist count badge for full games */}
+                          {isFull && waitingList[game.id]?.length > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                              ⏳ {waitingList[game.id].length} {t.playTogether.waiting}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -616,11 +667,22 @@ export default function PlayTogetherPage() {
                         {t.playTogether.cancel}
                       </button>
                     ) : isFull ? (
-                      waitingList[game.id] ? (
+                      myWaitingListEntries[game.id] ? (
                         // Show cancel waitinglist button if user is on waitinglist
                         <button
-                          onClick={() => handleWaitingListCancel(game.id)}
-                          className="rounded-2xl px-5 py-2.5 text-sm font-display font-semibold transition-all active:scale-[0.97] bg-destructive/20 text-destructive hover:bg-destructive/30"
+                          onClick={() => {
+                            if (!isWithin24Hours(game.date, game.time)) {
+                              handleWaitingListCancel(game.id, myWaitingListEntries[game.id]);
+                            }
+                          }}
+                          disabled={isWithin24Hours(game.date, game.time)}
+                          title={isWithin24Hours(game.date, game.time) ? "Cannot cancel waitlist within 24 hours of game" : "Cancel your waitlist entry"}
+                          className={cn(
+                            "rounded-2xl px-5 py-2.5 text-sm font-display font-semibold transition-all active:scale-[0.97]",
+                            isWithin24Hours(game.date, game.time)
+                              ? "bg-secondary text-muted-foreground cursor-not-allowed opacity-60"
+                              : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                          )}
                         >
                           {t.playTogether.cancelWaitlist}
                         </button>
@@ -628,7 +690,14 @@ export default function PlayTogetherPage() {
                         // Show register to waitinglist button if user is not on waitinglist and not registered
                         <button
                           onClick={() => setRegisterGameId(registerGameId === game.id ? null : game.id)}
-                          className="rounded-2xl border-2 border-primary px-5 py-2.5 text-sm font-display font-semibold text-primary transition-all hover:bg-primary/10 active:scale-[0.97]"
+                          disabled={isWithin24Hours(game.date, game.time)}
+                          title={isWithin24Hours(game.date, game.time) ? "Cannot join waitlist within 24 hours of game" : "Join the waitlist"}
+                          className={cn(
+                            "rounded-2xl border-2 px-5 py-2.5 text-sm font-display font-semibold transition-all active:scale-[0.97]",
+                            isWithin24Hours(game.date, game.time)
+                              ? "border-muted-foreground text-muted-foreground cursor-not-allowed opacity-60"
+                              : "border-primary text-primary hover:bg-primary/10"
+                          )}
                         >
                           {t.playTogether.joinWaitlist}
                         </button>
@@ -682,7 +751,8 @@ export default function PlayTogetherPage() {
                           handleRegister(game.id);
                         }
                       }}
-                      disabled={!registerForm.name || !registerForm.email || !registerForm.phone}
+                      disabled={!registerForm.name || !registerForm.email || !registerForm.phone || (isFull && isWithin24Hours(game.date, game.time))}
+                      title={isFull && isWithin24Hours(game.date, game.time) ? "Cannot join waitlist within 24 hours of game" : ""}
                       className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-sport-dark px-5 py-2.5 text-sm font-display font-semibold text-white transition-all hover:bg-sport-dark/90 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isFull ? t.playTogether.confirmWaitlist : t.playTogether.confirmJoin}

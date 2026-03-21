@@ -89,6 +89,7 @@ const translations = {
       namePlaceholder: "Ees- ja perekonnanimi",
       confirmJoin: "Kinnita registreerimine",
       selectCourt: "Vali väljak",
+      waiting: "ootel",
     },
     calendar: {
       title: "Broneeringute kalender",
@@ -198,6 +199,7 @@ const translations = {
       namePlaceholder: "First and last name",
       confirmJoin: "Confirm registration",
       selectCourt: "Select court",
+      waiting: "waiting",
     },
     calendar: {
       title: "Booking Calendar",

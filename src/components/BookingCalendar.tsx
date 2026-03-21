@@ -4,6 +4,7 @@ import { sportCenters, generateTimeSlots, sports, getBookingsFromStorage, type B
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { et } from "date-fns/locale";
 
 export default function BookingCalendar() {
   const { lang, t } = useLang();
@@ -21,6 +22,14 @@ export default function BookingCalendar() {
     return Array.from({ length: 14 }, (_, i) => `${(8 + i).toString().padStart(2, "0")}:00`);
   }, []);
 
+  const firstColumnWidth = useMemo(() => {
+  const longestCourtNameLength = Math.max(
+    ...sportCenters.flatMap((center) => center.courts.map((court) => court.name.length))
+  );
+
+  return Math.max(140, longestCourtNameLength * 8);
+  }, []);
+
   return (
     <section className="bg-sport-gray-light py-20 md:py-28">
       <div className="container">
@@ -33,14 +42,18 @@ export default function BookingCalendar() {
 
         <div className="mt-10 flex flex-col gap-8 lg:flex-row">
           {/* Left: calendar + center filter */}
-          <div className="flex flex-col gap-4">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(d) => d && setSelectedDate(d)}
-              className="rounded-2xl border border-border bg-card p-4 pointer-events-auto"
-            />
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col shrink-0 gap-4">
+            <div className="w-fit rounded-2xl border border-border bg-card p-2">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => d && setSelectedDate(d)}
+                locale={et}
+                className="pointer-events-auto"
+              />
+            </div>
+
+            <div className="flex max-w-[260px] flex-wrap gap-2">
               <button
                 onClick={() => setSelectedCenter("all")}
                 className={cn(
@@ -76,7 +89,7 @@ export default function BookingCalendar() {
                 <div key={center.id} className="mb-6">
                   <h3 className="mb-3 font-display text-base font-semibold">{center.name}</h3>
                   <div className="rounded-xl border border-border bg-card overflow-hidden">
-                    <div className="grid" style={{ gridTemplateColumns: `120px repeat(${hours.length}, 1fr)` }}>
+                    <div className="grid" style={{ gridTemplateColumns: `${firstColumnWidth}px repeat(${hours.length}, 1fr)` }}>
                       {/* Header row */}
                       <div className="border-b border-r border-border bg-secondary/50 p-2 text-xs font-medium text-muted-foreground">
                         {t.booking.courts}
@@ -95,7 +108,7 @@ export default function BookingCalendar() {
 
                         return (
                           <div key={court.id} className="contents">
-                            <div className="flex items-center gap-1.5 border-b border-r border-border p-2 text-xs font-medium last:border-b-0">
+                            <div className="flex items-center gap-1.5 border-b border-r border-border p-2 text-xs font-medium whitespace-nowrap last:border-b-0">
                               <span>{sport?.icon}</span>
                               {court.name}
                             </div>

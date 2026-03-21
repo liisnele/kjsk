@@ -33,8 +33,8 @@ export default function PlayTogetherPage() {
     duration: 1,
     description: "",
     level: "intermediate" as SkillLevel,
-    minPlayers: 2,
-    maxPlayers: 10,
+    minPlayers: "" as string | number,
+    maxPlayers: "" as string | number,
     creatorName: "",
     equipment: [] as string[],
   });
@@ -145,9 +145,13 @@ export default function PlayTogetherPage() {
   ) || [];
 
   const handleCreateGame = () => {
+    const minPlayers = Math.max(2, createForm.minPlayers === "" ? 2 : Number(createForm.minPlayers));
+    const maxPlayers = Math.min(26, createForm.maxPlayers === "" ? 10 : Number(createForm.maxPlayers));
+
     if (
       !createForm.sportId || !createForm.centerId || !createForm.courtId ||
-      !createForm.date || !createForm.time || !createForm.creatorName || !createForm.description
+      !createForm.date || !createForm.time || !createForm.creatorName || !createForm.description ||
+      minPlayers < 2 || maxPlayers < minPlayers || maxPlayers > 26
     ) return;
 
     const newGame: OpenGame = {
@@ -160,8 +164,8 @@ export default function PlayTogetherPage() {
       duration: createForm.duration,
       description: createForm.description,
       level: createForm.level,
-      minPlayers: createForm.minPlayers,
-      maxPlayers: createForm.maxPlayers,
+      minPlayers: minPlayers,
+      maxPlayers: maxPlayers,
       registeredPlayers: [{ name: createForm.creatorName }],
       creatorName: createForm.creatorName,
       equipment: createForm.equipment,
@@ -191,7 +195,7 @@ export default function PlayTogetherPage() {
     setCreateForm({
       sportId: "", centerId: "", courtId: "", date: "", time: "",
       duration: 1, description: "", level: "intermediate",
-      minPlayers: 2, maxPlayers: 10, creatorName: "", equipment: [],
+      minPlayers: "", maxPlayers: "", creatorName: "", equipment: [],
     });
   };
 
@@ -405,21 +409,21 @@ export default function PlayTogetherPage() {
                 </div>
               </div>
 
-              {/* Min/Max players */}
               <input
                 type="number"
                 min={2}
-                placeholder={t.playTogether.minPlayers}
+                placeholder={t.playTogether.minPlayersPlaceholder}
                 value={createForm.minPlayers}
-                onChange={(e) => setCreateForm({ ...createForm, minPlayers: Number(e.target.value) })}
+                onChange={(e) => setCreateForm({ ...createForm, minPlayers: e.target.value === "" ? "" : Number(e.target.value) })}
                 className={inputCls}
               />
               <input
                 type="number"
                 min={2}
-                placeholder={t.playTogether.maxPlayers}
+                max={26}
+                placeholder={t.playTogether.maxPlayersPlaceholder}
                 value={createForm.maxPlayers}
-                onChange={(e) => setCreateForm({ ...createForm, maxPlayers: Number(e.target.value) })}
+                onChange={(e) => setCreateForm({ ...createForm, maxPlayers: e.target.value === "" ? "" : Number(e.target.value) })}
                 className={inputCls}
               />
 
@@ -469,7 +473,13 @@ export default function PlayTogetherPage() {
 
             <button
               onClick={handleCreateGame}
-              disabled={!createForm.sportId || !createForm.centerId || !createForm.courtId || !createForm.date || !createForm.time || !createForm.creatorName || !createForm.description}
+              disabled={
+                !createForm.sportId || !createForm.centerId || !createForm.courtId || 
+                !createForm.date || !createForm.time || !createForm.creatorName || !createForm.description ||
+                (createForm.minPlayers !== "" && Number(createForm.minPlayers) < 2) ||
+                (createForm.maxPlayers !== "" && Number(createForm.maxPlayers) > 26) ||
+                (createForm.maxPlayers !== "" && createForm.minPlayers !== "" && Number(createForm.maxPlayers) < Number(createForm.minPlayers))
+              }
               className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t.playTogether.publish}

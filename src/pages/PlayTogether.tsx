@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
-import { sports, sportCenters, sportPrices } from "@/data/mockData";
+import { sports, sportCenters } from "@/data/mockData";
 import Header from "@/components/Header";
 import { cn } from "@/lib/utils";
 import { Users, MapPin, Calendar, Clock, Plus, ArrowRight, X, ChevronDown } from "lucide-react";

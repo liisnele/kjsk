@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useLang } from "@/contexts/LanguageContext";
-import { sports, sportCenters, sportPrices, generateTimeSlots, Booking } from "@/data/mockData";
+import { sports, sportCenters, sportPrices, equipmentPrices, getEquipmentName, generateTimeSlots, Booking } from "@/data/mockData";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -67,6 +67,14 @@ export default function BookingPage() {
   const courtsForSport = selectedCenterData?.courts.filter(
     (c) => c.sportId === selectedSport
   ) || [];
+
+  const equipmentTotal = useMemo(() => {
+    return form.equipment.reduce((total, eq) => total + (equipmentPrices[eq] || 0), 0);
+  }, [form.equipment]);
+
+  const totalPrice = useMemo(() => {
+    return sportPrices[selectedSport] * selectedDuration + equipmentTotal;
+  }, [selectedSport, selectedDuration, equipmentTotal]);
 
   const handleConfirm = () => {
     const booking: Booking = {
@@ -451,7 +459,7 @@ export default function BookingPage() {
                               : "bg-secondary hover:bg-secondary/80"
                           )}
                         >
-                          {eq}
+                          {getEquipmentName(eq, lang)} · €{equipmentPrices[eq] || 0}
                         </button>
                       ))}
                     </div>
@@ -500,22 +508,29 @@ export default function BookingPage() {
                     <span className="text-muted-foreground">{t.booking.fullName}</span>
                     <span className="font-medium">{form.name}</span>
                   </div>
+                  {form.equipment.length > 0 && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{t.booking.courtRental}:</span>
+                        <span>€{sportPrices[selectedSport] * selectedDuration}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{t.booking.equipmentCost}:</span>
+                        <span>€{equipmentTotal}</span>
+                      </div>
+                      <div className="border-t border-border pt-1" />
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.price}</span>
                     <span className="font-bold text-foreground">
-                      €{sportPrices[selectedSport] * selectedDuration}
+                      €{totalPrice}
                     </span>
                   </div>
                 </div>
               </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <button
-                  onClick={() => navigate("/my-bookings")}
-                  className="rounded-2xl bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97]"
-                >
-                  {t.booking.viewBookings}
-                </button>
                 <button
                   onClick={() => navigate("/")}
                   className="rounded-2xl border-2 border-border px-6 py-3 font-display font-semibold transition-all hover:bg-secondary active:scale-[0.97]"

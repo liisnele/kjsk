@@ -141,6 +141,29 @@ export const sportPrices: Record<string, number> = {
   hockey: 25,
 };
 
+export const equipmentPrices: Record<string, number> = {
+  "Joogamatt / Yoga mat": 2,
+  "Reketid / Rackets": 5,
+  "Sulid / Shuttlecocks": 1,
+  "Ujumislaud / Kickboard": 3,
+  "Ujumisprillid / Goggles": 2,
+  "Pallid / Balls": 3,
+  "Pall / Ball": 2,
+  "Võrk / Net": 5,
+  "Uisud / Skates": 10,
+  "Kiiver / Helmet": 5,
+  "Kepp / Stick": 3,
+  "Kaitsmed / Pads": 10,
+};
+
+export function getEquipmentName(equipment: string, lang: "et" | "en"): string {
+  const parts = equipment.split(" / ");
+  if (parts.length === 2) {
+    return lang === "et" ? parts[0] : parts[1];
+  }
+  return equipment;
+}
+
 export function generateTimeSlots(date: string, centerId: string, sportId: string): TimeSlot[] {
   const slots: TimeSlot[] = [];
   const center = sportCenters.find((c) => c.id === centerId);

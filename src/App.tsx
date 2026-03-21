@@ -21,7 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/booking" element={<BookingPage />} />
-            <Route path="/my-bookings" element={<MyBookingsPage />} />
+            <Route path="/play-together" element={<PlayTogetherPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -115,7 +115,7 @@ const translations = {
     nav: {
       home: "Home",
       booking: "Booking",
-      myBookings: "My Bookings",
+      playTogether: "Play Together",
     },
     sports: {
       title: "Popular Sports",

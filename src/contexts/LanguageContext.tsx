@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import translations, { Lang, Translations } from "@/data/translations";
+import { getTranslations, Lang, Translations } from "@/data/translations";
 
 interface LanguageContextType {
   lang: Lang;

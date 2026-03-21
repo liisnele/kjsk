@@ -109,6 +109,26 @@ const mockGames: OpenGame[] = [
     creatorName: "Katrin L.",
     equipment: ["Reketid / Rackets", "Pallid / Balls"],
   },
+  {
+    id: "g6",
+    sportId: "volleyball",
+    centerId: "spordihoone",
+    courtId: "s4",
+    date: "2026-03-28",
+    time: "19:30",
+    duration: 2,
+    description: "Jalgpallimatš kesktaseme mängijatele. Kogu varustus olemas!",
+    level: "intermediate",
+    minPlayers: 8,
+    maxPlayers: 8,
+    registeredPlayers: [
+      { name: "Kristjan K." }, { name: "Taavi R." }, { name: "Kristo S." },
+      { name: "Jaan T." }, { name: "Rait V." }, { name: "Martin L." },
+      { name: "Toomas P." }, { name: "Erik M." },
+    ],
+    creatorName: "Kristjan K.",
+    equipment: ["Pall / Ball"],
+  },
 ];
 
 export default function PlayTogetherPage() {
@@ -117,6 +137,9 @@ export default function PlayTogetherPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [registerGameId, setRegisterGameId] = useState<string | null>(null);
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", phone: "" });
+  const [hoveredProgressBar, setHoveredProgressBar] = useState<string | null>(null);
+  const [myRegistrations, setMyRegistrations] = useState<{ [gameId: string]: string }>({});
+  const [waitingList, setWaitingList] = useState<{ [gameId: string]: string }>({});
 
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -133,6 +156,46 @@ export default function PlayTogetherPage() {
     creatorName: "",
     equipment: [] as string[],
   });
+
+  // Helper function to check if game is within 24 hours
+  const isWithin24Hours = (gameDate: string, gameTime: string): boolean => {
+    const now = new Date();
+    const gameDateTime = new Date(`${gameDate}T${gameTime}`);
+    const hoursUntilGame = (gameDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilGame < 24 && hoursUntilGame > 0;
+  };
+
+  // Handle player cancellation - only for own registration
+  const handleCancelRegistration = (gameId: string) => {
+    const playerName = myRegistrations[gameId];
+    if (!playerName) return;
+    
+    setGames(games.map((g) =>
+      g.id === gameId
+        ? { 
+            ...g, 
+            registeredPlayers: g.registeredPlayers.filter((p) => p.name !== playerName)
+          }
+        : g
+    ));
+    
+    // Remove from myRegistrations
+    const updatedRegistrations = { ...myRegistrations };
+    delete updatedRegistrations[gameId];
+    setMyRegistrations(updatedRegistrations);
+  };
+
+  // Handle waiting list registration
+  const handleWaitingListRegister = (gameId: string, playerName: string) => {
+    setWaitingList({ ...waitingList, [gameId]: playerName });
+  };
+
+  // Handle waiting list cancellation
+  const handleWaitingListCancel = (gameId: string) => {
+    const updatedWaitingList = { ...waitingList };
+    delete updatedWaitingList[gameId];
+    setWaitingList(updatedWaitingList);
+  };
 
   const levelLabels: Record<SkillLevel, { et: string; en: string }> = {
     beginner: { et: "Algaja", en: "Beginner" },
@@ -212,6 +275,8 @@ export default function PlayTogetherPage() {
         ? { ...g, registeredPlayers: [...g.registeredPlayers, { name: registerForm.name }] }
         : g
     ));
+    // Track this registration as "mine"
+    setMyRegistrations({ ...myRegistrations, [gameId]: registerForm.name });
     setRegisterGameId(null);
     setRegisterForm({ name: "", email: "", phone: "" });
   };
@@ -437,7 +502,6 @@ export default function PlayTogetherPage() {
             const center = sportCenters.find((c) => c.id === game.centerId);
             const court = center?.courts.find((c) => c.id === game.courtId);
             const isFull = game.registeredPlayers.length >= game.maxPlayers;
-            const spotsLeft = game.maxPlayers - game.registeredPlayers.length;
 
             return (
               <div
@@ -458,7 +522,7 @@ export default function PlayTogetherPage() {
                     </div>
 
                     {/* Info */}
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2.5 text-sm text-muted-foreground">
                       <span className="inline-flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5" />
                         {game.date}
@@ -471,10 +535,36 @@ export default function PlayTogetherPage() {
                         <MapPin className="h-3.5 w-3.5" />
                         {center?.name} · {court?.name}
                       </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5" />
-                        {game.registeredPlayers.length}/{game.maxPlayers} ({t.playTogether.min} {game.minPlayers})
-                      </span>
+                      
+                      {/* Player Registration Progress - Inline */}
+                      <div className="w-full max-w-xs">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-3.5 w-3.5 shrink-0" />
+                          <span className="text-xs font-medium text-foreground">{game.registeredPlayers.length}/{game.maxPlayers}</span>
+                          <div 
+                            className="relative flex-1 h-1.5 bg-secondary rounded-full overflow-visible group"
+                            onMouseEnter={() => setHoveredProgressBar(game.id)}
+                            onMouseLeave={() => setHoveredProgressBar(null)}
+                          >
+                            <div 
+                              className="h-full bg-primary transition-all"
+                              style={{ width: `${(game.registeredPlayers.length / game.maxPlayers) * 100}%` }}
+                            />
+                            {/* Minimum threshold marker */}
+                            <div 
+                              className="absolute top-0 h-full w-0.5 bg-amber-500/60 hover:bg-amber-500/100 transition-colors cursor-help"
+                              style={{ left: `${(game.minPlayers / game.maxPlayers) * 100}%` }}
+                            />
+                            
+                            {/* Hover tooltip */}
+                            {hoveredProgressBar === game.id && (
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-foreground text-background text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+                                Minimum: {game.minPlayers} players
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <p className="mt-3 text-sm text-pretty">{game.description}</p>
@@ -505,30 +595,62 @@ export default function PlayTogetherPage() {
 
                   {/* Register button */}
                   <div className="flex shrink-0 flex-col items-end gap-2">
-                    {isFull ? (
-                      <span className="rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-muted-foreground">
-                        {t.playTogether.full}
-                      </span>
-                    ) : (
-                      <>
+                    {myRegistrations[game.id] ? (
+                      // Show cancel button if user is registered (always, regardless of full status)
+                      <button
+                        onClick={() => {
+                          const canCancel = !isWithin24Hours(game.date, game.time);
+                          if (canCancel) {
+                            handleCancelRegistration(game.id);
+                          }
+                        }}
+                        disabled={isWithin24Hours(game.date, game.time)}
+                        title={isWithin24Hours(game.date, game.time) ? "Cannot cancel within 24 hours of game" : "Cancel your registration"}
+                        className={cn(
+                          "rounded-2xl px-5 py-2.5 text-sm font-display font-semibold transition-all active:scale-[0.97]",
+                          isWithin24Hours(game.date, game.time)
+                            ? "bg-secondary text-muted-foreground cursor-not-allowed opacity-60"
+                            : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                        )}
+                      >
+                        {t.playTogether.cancel}
+                      </button>
+                    ) : isFull ? (
+                      waitingList[game.id] ? (
+                        // Show cancel waitinglist button if user is on waitinglist
+                        <button
+                          onClick={() => handleWaitingListCancel(game.id)}
+                          className="rounded-2xl px-5 py-2.5 text-sm font-display font-semibold transition-all active:scale-[0.97] bg-destructive/20 text-destructive hover:bg-destructive/30"
+                        >
+                          {t.playTogether.cancelWaitlist}
+                        </button>
+                      ) : (
+                        // Show register to waitinglist button if user is not on waitinglist and not registered
                         <button
                           onClick={() => setRegisterGameId(registerGameId === game.id ? null : game.id)}
-                          className="rounded-2xl bg-primary px-5 py-2.5 text-sm font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97]"
+                          className="rounded-2xl border-2 border-primary px-5 py-2.5 text-sm font-display font-semibold text-primary transition-all hover:bg-primary/10 active:scale-[0.97]"
                         >
-                          {t.playTogether.join}
+                          {t.playTogether.joinWaitlist}
                         </button>
-                        <span className="text-xs text-muted-foreground">
-                          {spotsLeft} {t.playTogether.spotsLeft}
-                        </span>
-                      </>
+                      )
+                    ) : (
+                      // Show join button if user is not registered and game is not full
+                      <button
+                        onClick={() => setRegisterGameId(registerGameId === game.id ? null : game.id)}
+                        className="rounded-2xl bg-primary px-5 py-2.5 text-sm font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97]"
+                      >
+                        {t.playTogether.join}
+                      </button>
                     )}
                   </div>
                 </div>
 
                 {/* Register form inline */}
-                {registerGameId === game.id && !isFull && (
+                {registerGameId === game.id && !myRegistrations[game.id] && (
                   <div className="mt-4 border-t border-border pt-4 fade-in-up">
-                    <h4 className="mb-3 font-display text-sm font-semibold">{t.playTogether.registerTitle}</h4>
+                    <h4 className="mb-3 font-display text-sm font-semibold">
+                      {isFull ? t.playTogether.registerWaitlist : t.playTogether.registerTitle}
+                    </h4>
                     <div className="grid gap-3 sm:grid-cols-3">
                       <input
                         placeholder={t.playTogether.namePlaceholder}
@@ -551,11 +673,19 @@ export default function PlayTogetherPage() {
                       />
                     </div>
                     <button
-                      onClick={() => handleRegister(game.id)}
+                      onClick={() => {
+                        if (isFull) {
+                          handleWaitingListRegister(game.id, registerForm.name);
+                          setRegisterGameId(null);
+                          setRegisterForm({ name: "", email: "", phone: "" });
+                        } else {
+                          handleRegister(game.id);
+                        }
+                      }}
                       disabled={!registerForm.name || !registerForm.email || !registerForm.phone}
                       className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-sport-dark px-5 py-2.5 text-sm font-display font-semibold text-white transition-all hover:bg-sport-dark/90 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {t.playTogether.confirmJoin}
+                      {isFull ? t.playTogether.confirmWaitlist : t.playTogether.confirmJoin}
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>

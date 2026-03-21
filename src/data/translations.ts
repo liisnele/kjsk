@@ -189,5 +189,10 @@ const translations = {
   },
 } as const;
 
-export type Translations = typeof translations.et;
+export type Translations = (typeof translations)["et"];
+
+export function getTranslations(lang: Lang): Translations {
+  return translations[lang] as unknown as Translations;
+}
+
 export default translations;

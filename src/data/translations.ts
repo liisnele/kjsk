@@ -3,8 +3,8 @@ export type Lang = "et" | "en";
 const translations = {
   et: {
     hero: {
-      title: "Kohtla-Järve spordikeskus",
-      subtitle: "Avasta spordialasid ja broneeri treeningaeg Kohtla-Järve spordikeskustes. Kiire, lihtne ja mugav.",
+      title: "Kohtla-Järve Spordikeskus",
+      subtitle: "Avasta spordialasid ja broneeri treeningaeg Kohtla-Järve Spordikeskustes. Kiire, lihtne ja mugav.",
       cta: "Broneering",
       ctaSecondary: "Spordialad",
     },
@@ -107,7 +107,7 @@ const translations = {
   },
   en: {
     hero: {
-      title: "Kohtla-Järve spordikeskus",
+      title: "Kohtla-Järve Spordikeskus",
       subtitle: "Discover sports activities and book a session at sports centers in Kohtla-Järve. Quick, simple and convenient.",
       cta: "Book Now",
       ctaSecondary: "Sports",

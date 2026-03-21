@@ -15,11 +15,14 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-display text-lg font-bold text-primary-foreground">
-            K
+          <div className="flex h-19 w-40 items-center justify-center rounded-xl bg-primary font-display text-lg font-bold text-primary-foreground">
+              <img
+                src="/kj-logo-must.svg"
+                alt="Logo"
+                className="h-full w-full object-cover"
+              />
           </div>
           <span className="hidden font-display text-lg font-semibold sm:block">
-            KJ Sport
           </span>
         </Link>
 

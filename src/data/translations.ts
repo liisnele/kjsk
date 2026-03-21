@@ -11,7 +11,7 @@ const translations = {
     nav: {
       home: "Avaleht",
       booking: "Broneering",
-      myBookings: "Minu broneeringud",
+      playTogether: "Mängi koos",
     },
     sports: {
       title: "Populaarsed spordialad",

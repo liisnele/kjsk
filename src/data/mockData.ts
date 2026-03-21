@@ -108,7 +108,7 @@ export const sportCenters: SportCenter[] = [
   },
   {
     id: "spordihoone",
-    name: "Kohtla-Järve spordihoone",
+    name: "Kohtla-Järve Spordihoone",
     location: "Spordi 6, Kohtla-Järve",
     description: {
       et: "Mitmekülgne spordihoone erinevate spordialade harrastamiseks.",

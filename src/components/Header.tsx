@@ -15,17 +15,25 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-19 w-40 items-center justify-center rounded-xl bg-primary font-display text-lg font-bold text-primary-foreground">
-              <img
-                src="/kj-logo-must.svg"
-                alt="Logo"
-                className="h-full w-full object-cover"
-              />
+          <div className="flex items-center justify-center rounded-xl bg-primary font-display text-lg font-bold text-primary-foreground">
+            {/* Mobile logo */}
+            <img
+              src="/logo_must.png"
+              alt="Logo"
+              className="block h-10 w-10 object-contain sm:hidden"
+            />
+
+            {/* Desktop logo */}
+            <img
+              src="/kj-logo-must.svg"
+              alt="Logo"
+              className="hidden h-19 w-40 object-contain sm:block"
+            />
           </div>
           <span className="hidden font-display text-lg font-semibold sm:block">
+
           </span>
         </Link>
-
         <nav className="flex items-center gap-6">
           <Link to="/" className={linkClass("/")}>
             {t.nav.home}

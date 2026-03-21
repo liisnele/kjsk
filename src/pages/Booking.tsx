@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Check, MapPin, Star, ArrowLeft, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
+import { et } from "date-fns/locale";
 
 type StartMode = "sport" | "center" | null;
 
@@ -34,8 +35,7 @@ export default function BookingPage() {
     name: "",
     email: "",
     phone: "",
-    clubId: "",
-    participants: 1,
+    participants: "",
     equipment: [] as string[],
     note: "",
   });
@@ -267,7 +267,11 @@ export default function BookingPage() {
                         <p className="mt-2 text-sm text-muted-foreground">{center.description[lang]}</p>
                         <div className="mt-3 flex items-center gap-3 text-sm">
                           <span className="font-medium">€{sportPrices[selectedSport]}/h</span>
-                          <span className="text-muted-foreground">{courtsCount} {t.booking.courts}</span>
+                          <span className="text-muted-foreground">
+                            {courtsCount} {lang === "et"
+                              ? (courtsCount === 1 ? "väljak" : "väljakut")
+                              : (courtsCount === 1 ? "court" : "courts")}
+                          </span>
                         </div>
                       </button>
                     );
@@ -299,7 +303,9 @@ export default function BookingPage() {
                         {t.sportNames[sport.key as keyof typeof t.sportNames]}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        €{sportPrices[sport.id]}/h · {courtsCount} {t.booking.courts}
+                        €{sportPrices[sport.id]}/h · {courtsCount} {lang === "et"
+                          ? (courtsCount === 1 ? "väljak" : "väljakut")
+                          : (courtsCount === 1 ? "court" : "courts")}
                       </span>
                     </button>
                   );
@@ -317,6 +323,7 @@ export default function BookingPage() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(d) => d && setSelectedDate(d)}
+                  locale={et}
                   className="rounded-2xl border border-border bg-card p-4 pointer-events-auto"
                 />
 
@@ -422,17 +429,22 @@ export default function BookingPage() {
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 <input
-                  placeholder={t.booking.clubId}
-                  value={form.clubId}
-                  onChange={(e) => setForm({ ...form, clubId: e.target.value })}
-                  className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                />
-                <input
                   type="number"
                   min={1}
-                  placeholder={t.booking.participants}
-                  value={form.participants}
-                  onChange={(e) => setForm({ ...form, participants: Number(e.target.value) })}
+                  max={50}
+                  placeholder={t.booking.participantsPlaceholder}
+                  value={form.participants === 0 ? "" : form.participants}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (val === "") {
+                      setForm({ ...form, participants: "" });
+                    } else {
+                      let num = Number(val);
+                      if (num < 1) num = 1;
+                      if (num > 50) num = 50;
+                      setForm({ ...form, participants: num });
+                    }
+                  }}
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
 

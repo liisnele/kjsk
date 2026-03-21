@@ -41,8 +41,12 @@ export default function Header() {
           <Link to="/booking" className={linkClass("/booking")}>
             {t.nav.booking}
           </Link>
-          <Link to="/play-together" className={linkClass("/play-together")}>
-            {t.nav.playTogether}
+          <Link to="/play-together" className={linkClass("/play-together") + " text-center"}>
+            <span className="block sm:inline whitespace-pre-line">
+              {t.nav.playTogether.split(" ").length === 2
+                ? (<><span>{t.nav.playTogether.split(" ")[0]}</span><br className="sm:hidden" /><span>{t.nav.playTogether.split(" ")[1]}</span></>)
+                : t.nav.playTogether}
+            </span>
           </Link>
         </nav>
 

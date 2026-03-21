@@ -412,9 +412,15 @@ export default function PlayTogetherPage() {
               <input
                 type="number"
                 min={2}
+                max={26}
                 placeholder={t.playTogether.minPlayersPlaceholder}
                 value={createForm.minPlayers}
-                onChange={(e) => setCreateForm({ ...createForm, minPlayers: e.target.value === "" ? "" : Number(e.target.value) })}
+                onChange={(e) => {
+                  let val = e.target.value === "" ? "" : Number(e.target.value);
+                  if (val !== "" && val < 2) val = 2;
+                  if (val !== "" && val > 26) val = 26;
+                  setCreateForm({ ...createForm, minPlayers: val });
+                }}
                 className={inputCls}
               />
               <input
@@ -423,7 +429,12 @@ export default function PlayTogetherPage() {
                 max={26}
                 placeholder={t.playTogether.maxPlayersPlaceholder}
                 value={createForm.maxPlayers}
-                onChange={(e) => setCreateForm({ ...createForm, maxPlayers: e.target.value === "" ? "" : Number(e.target.value) })}
+                onChange={(e) => {
+                  let val = e.target.value === "" ? "" : Number(e.target.value);
+                  if (val !== "" && val < 2) val = 2;
+                  if (val !== "" && val > 26) val = 26;
+                  setCreateForm({ ...createForm, maxPlayers: val });
+                }}
                 className={inputCls}
               />
 

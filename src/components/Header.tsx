@@ -30,8 +30,8 @@ export default function Header() {
           <Link to="/booking" className={linkClass("/booking")}>
             {t.nav.booking}
           </Link>
-          <Link to="/my-bookings" className={linkClass("/my-bookings")}>
-            {t.nav.myBookings}
+          <Link to="/play-together" className={linkClass("/play-together")}>
+            {t.nav.playTogether}
           </Link>
         </nav>
 

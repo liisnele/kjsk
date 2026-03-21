@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import BookingPage from "./pages/Booking";
-import MyBookingsPage from "./pages/MyBookings";
+import PlayTogetherPage from "./pages/PlayTogether";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,7 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/booking" element={<BookingPage />} />
-            <Route path="/my-bookings" element={<MyBookingsPage />} />
+            <Route path="/play-together" element={<PlayTogetherPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

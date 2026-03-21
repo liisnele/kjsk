@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useLang } from "@/contexts/LanguageContext";
-import { sportCenters, generateTimeSlots, sports } from "@/data/mockData";
+import { sportCenters, generateTimeSlots, sports, getBookingsFromStorage, type Booking } from "@/data/mockData";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ export default function BookingCalendar() {
   const { lang, t } = useLang();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedCenter, setSelectedCenter] = useState<string>("all");
+  const [bookings, setBookings] = useState<Booking[]>(getBookingsFromStorage());
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
 
@@ -89,7 +90,7 @@ export default function BookingCalendar() {
                       {/* Court rows */}
                       {center.courts.map((court) => {
                         const sport = sports.find((s) => s.id === court.sportId);
-                        const slots = generateTimeSlots(dateStr, center.id, court.sportId);
+                        const slots = generateTimeSlots(dateStr, center.id, court.sportId, bookings);
                         const courtSlots = slots.filter((s) => s.courtId === court.id);
 
                         return (

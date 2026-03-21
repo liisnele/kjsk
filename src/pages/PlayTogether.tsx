@@ -1,135 +1,9 @@
 import { useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
-import { sports, sportCenters } from "@/data/mockData";
+import { sports, sportCenters, generateTimeSlots, isDurationAvailable, getAvailableTimesWithMinDuration, mockGames, type OpenGame, type SkillLevel, type Booking } from "@/data/mockData";
 import Header from "@/components/Header";
 import { cn } from "@/lib/utils";
 import { Users, MapPin, Calendar, Clock, Plus, ArrowRight, X, ChevronDown } from "lucide-react";
-
-type SkillLevel = "beginner" | "intermediate" | "professional";
-
-interface OpenGame {
-  id: string;
-  sportId: string;
-  centerId: string;
-  courtId: string;
-  date: string;
-  time: string;
-  duration: number;
-  description: string;
-  level: SkillLevel;
-  minPlayers: number;
-  maxPlayers: number;
-  registeredPlayers: { name: string }[];
-  creatorName: string;
-  equipment: string[];
-}
-
-const mockGames: OpenGame[] = [
-  {
-    id: "g1",
-    sportId: "basketball",
-    centerId: "wiru",
-    courtId: "w1",
-    date: "2026-03-23",
-    time: "18:00",
-    duration: 2,
-    description: "Sõbralik korvpallimäng kõigile! Tulge mängime ja nautige head aega.",
-    level: "intermediate",
-    minPlayers: 6,
-    maxPlayers: 10,
-    registeredPlayers: [{ name: "Andrei I." }, { name: "Viktor K." }, { name: "Elena S." }, { name: "Dmitri P." }],
-    creatorName: "Andrei I.",
-    equipment: [],
-  },
-  {
-    id: "g2",
-    sportId: "volleyball",
-    centerId: "spordihoone",
-    courtId: "s2",
-    date: "2026-03-24",
-    time: "19:00",
-    duration: 2,
-    description: "Võrkpall algajatele — õpime koos! Kõik on oodatud, ka need kes pole varem mänginud.",
-    level: "beginner",
-    minPlayers: 8,
-    maxPlayers: 12,
-    registeredPlayers: [{ name: "Maria P." }, { name: "Jelena T." }, { name: "Anna K." }],
-    creatorName: "Maria P.",
-    equipment: ["Pall / Ball"],
-  },
-  {
-    id: "g3",
-    sportId: "badminton",
-    centerId: "wiru",
-    courtId: "w5",
-    date: "2026-03-25",
-    time: "17:00",
-    duration: 1,
-    description: "Otsin paarismängu partnerit sulgpallis. Eelistan keskmisel tasemel mängijat.",
-    level: "intermediate",
-    minPlayers: 2,
-    maxPlayers: 4,
-    registeredPlayers: [{ name: "Igor R." }],
-    creatorName: "Igor R.",
-    equipment: ["Reketid / Rackets", "Sulid / Shuttlecocks"],
-  },
-  {
-    id: "g4",
-    sportId: "hockey",
-    centerId: "jaahall",
-    courtId: "j2",
-    date: "2026-03-26",
-    time: "20:00",
-    duration: 2,
-    description: "Jäähoki trenn kogenud mängijatele. Täisvarustus nõutud!",
-    level: "professional",
-    minPlayers: 10,
-    maxPlayers: 20,
-    registeredPlayers: [
-      { name: "Aleksei M." }, { name: "Pavel S." }, { name: "Roman K." },
-      { name: "Nikita V." }, { name: "Sergei L." }, { name: "Oleg T." },
-      { name: "Artem D." },
-    ],
-    creatorName: "Aleksei M.",
-    equipment: ["Kepp / Stick", "Kiiver / Helmet", "Kaitsmed / Pads"],
-  },
-  {
-    id: "g5",
-    sportId: "tennis",
-    centerId: "spordihoone",
-    courtId: "s3",
-    date: "2026-03-27",
-    time: "10:00",
-    duration: 1,
-    description: "Tennise üksikmäng hommikul. Tule ja tee trenni!",
-    level: "beginner",
-    minPlayers: 2,
-    maxPlayers: 2,
-    registeredPlayers: [{ name: "Katrin L." }],
-    creatorName: "Katrin L.",
-    equipment: ["Reketid / Rackets", "Pallid / Balls"],
-  },
-  {
-    id: "g6",
-    sportId: "volleyball",
-    centerId: "spordihoone",
-    courtId: "s4",
-    date: "2026-03-28",
-    time: "19:30",
-    duration: 2,
-    description: "Jalgpallimatš kesktaseme mängijatele. Kogu varustus olemas!",
-    level: "intermediate",
-    minPlayers: 8,
-    maxPlayers: 8,
-    registeredPlayers: [
-      { name: "Kristjan K." }, { name: "Taavi R." }, { name: "Kristo S." },
-      { name: "Jaan T." }, { name: "Rait V." }, { name: "Martin L." },
-      { name: "Toomas P." }, { name: "Erik M." },
-    ],
-    creatorName: "Kristjan K.",
-    equipment: ["Pall / Ball"],
-  },
-];
 
 export default function PlayTogetherPage() {
   const { lang, t } = useLang();
@@ -141,6 +15,13 @@ export default function PlayTogetherPage() {
   const [myRegistrations, setMyRegistrations] = useState<{ [gameId: string]: string }>({});
   const [waitingList, setWaitingList] = useState<{ [gameId: string]: string[] }>({});
   const [myWaitingListEntries, setMyWaitingListEntries] = useState<{ [gameId: string]: string }>({});
+  const [bookings, setBookings] = useState<Booking[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("bookings") || "[]");
+    } catch {
+      return [];
+    }
+  });
 
   // Create form state
   const [createForm, setCreateForm] = useState({
@@ -287,7 +168,7 @@ export default function PlayTogetherPage() {
     };
 
     // Also save as a booking in localStorage for the calendar
-    const booking = {
+    const booking: Booking = {
       id: `b${Date.now()}`,
       sportId: createForm.sportId,
       centerId: createForm.centerId,
@@ -301,8 +182,9 @@ export default function PlayTogetherPage() {
       status: "confirmed",
       courtId: createForm.courtId,
     };
-    const existing = JSON.parse(localStorage.getItem("bookings") || "[]");
-    localStorage.setItem("bookings", JSON.stringify([...existing, booking]));
+    const newBookings = [...bookings, booking];
+    setBookings(newBookings);
+    localStorage.setItem("bookings", JSON.stringify(newBookings));
 
     setGames([newGame, ...games]);
     setShowCreateForm(false);
@@ -423,31 +305,82 @@ export default function PlayTogetherPage() {
               />
 
               {/* Time */}
-              <input
-                type="time"
-                value={createForm.time}
-                onChange={(e) => setCreateForm({ ...createForm, time: e.target.value })}
-                className={inputCls}
-              />
+              <div className="relative">
+                <select
+                  value={createForm.time}
+                  onChange={(e) => setCreateForm({ ...createForm, time: e.target.value })}
+                  disabled={!createForm.date || !createForm.courtId}
+                  className={cn(inputCls, "appearance-none pr-10 disabled:opacity-50")}
+                >
+                  <option value="">{t.booking.selectTime || "Select time"}</option>
+                  {createForm.date && createForm.courtId && createForm.sportId ? (
+                    getAvailableTimesWithMinDuration(
+                      createForm.date,
+                      createForm.centerId,
+                      createForm.sportId,
+                      1,
+                      bookings
+                    ).map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))
+                  ) : null}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              </div>
 
               {/* Duration */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium">{t.booking.timeBlock}</label>
                 <div className="flex gap-2">
-                  {[1, 2, 3, 4].map((h) => (
-                    <button
-                      key={h}
-                      onClick={() => setCreateForm({ ...createForm, duration: h })}
-                      className={cn(
-                        "rounded-lg px-4 py-2 text-sm font-medium transition-all active:scale-95",
-                        createForm.duration === h
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-foreground hover:bg-secondary/80"
-                      )}
-                    >
-                      {h}h
-                    </button>
-                  ))}
+                  {(() => {
+                    if (!createForm.time || !createForm.courtId || !createForm.date || !createForm.centerId) {
+                      return null;
+                    }
+
+                    // Calculate available durations
+                    const availableDurations = [1, 2, 3, 4].filter((duration) =>
+                      isDurationAvailable(
+                        createForm.date,
+                        createForm.time,
+                        duration,
+                        createForm.centerId,
+                        createForm.courtId,
+                        bookings
+                      )
+                    );
+
+                    // If no full hour available, show only 1h
+                    if (availableDurations.length === 0) {
+                      return (
+                        <button
+                          onClick={() => setCreateForm({ ...createForm, duration: 1 })}
+                          className={cn(
+                            "rounded-lg px-4 py-2 text-sm font-medium transition-all active:scale-95",
+                            "bg-primary text-primary-foreground"
+                          )}
+                        >
+                          1h
+                        </button>
+                      );
+                    }
+
+                    return availableDurations.map((h) => (
+                      <button
+                        key={h}
+                        onClick={() => setCreateForm({ ...createForm, duration: h })}
+                        className={cn(
+                          "rounded-lg px-4 py-2 text-sm font-medium transition-all active:scale-95",
+                          createForm.duration === h
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-foreground hover:bg-secondary/80"
+                        )}
+                      >
+                        {h}h
+                      </button>
+                    ));
+                  })()}
                 </div>
               </div>
 
@@ -511,7 +444,7 @@ export default function PlayTogetherPage() {
                             : "bg-secondary hover:bg-secondary/80"
                         )}
                       >
-                        {eq}
+                        {t.equipmentNames[eq as keyof typeof t.equipmentNames]}
                       </button>
                     ))}
                   </div>
@@ -519,13 +452,19 @@ export default function PlayTogetherPage() {
               )}
 
               {/* Description */}
-              <textarea
-                placeholder={t.playTogether.description}
-                value={createForm.description}
-                onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                rows={3}
-                className={cn(inputCls, "md:col-span-2 resize-none")}
-              />
+              <div className="md:col-span-2">
+                <textarea
+                  placeholder={t.playTogether.description}
+                  value={createForm.description}
+                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value.slice(0, 1000) })}
+                  maxLength={1000}
+                  rows={3}
+                  className={cn(inputCls, "resize-none w-full break-words whitespace-pre-wrap overflow-hidden")}
+                />
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {createForm.description.length}/1000
+                </div>
+              </div>
             </div>
 
             <button
@@ -618,14 +557,14 @@ export default function PlayTogetherPage() {
                       </div>
                     </div>
 
-                    <p className="mt-3 text-sm text-pretty">{game.description}</p>
+                    <p className="mt-3 text-sm text-pretty w-full break-words whitespace-pre-wrap max-w-full overflow-hidden">{game.description}</p>
 
                     {/* Equipment */}
-                    {game.equipment.length > 0 && (
+                    {game.equipment && game.equipment.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {game.equipment.map((eq) => (
                           <span key={eq} className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-                            {eq}
+                            {t.equipmentNames[eq as keyof typeof t.equipmentNames] || eq}
                           </span>
                         ))}
                       </div>
@@ -633,14 +572,29 @@ export default function PlayTogetherPage() {
 
                     {/* Registered */}
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      {game.registeredPlayers.map((p, i) => (
-                        <span
-                          key={i}
-                          className="inline-flex h-7 items-center rounded-full bg-sport-yellow-light px-2.5 text-xs font-medium"
-                        >
-                          {p.name}
-                        </span>
-                      ))}
+                      {myRegistrations[game.id] === game.creatorName ? (
+                        // User is the organizer - show all names
+                        game.registeredPlayers.map((p, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex h-7 items-center rounded-full bg-sport-yellow-light px-2.5 text-xs font-medium"
+                          >
+                            {p.name}
+                          </span>
+                        ))
+                      ) : (
+                        // User is not the organizer - show organizer + count
+                        <>
+                          <span className="inline-flex h-7 items-center rounded-full bg-sport-yellow-light px-2.5 text-xs font-medium">
+                            {game.creatorName}
+                          </span>
+                          {game.registeredPlayers.length > 1 && (
+                            <span className="inline-flex h-7 items-center rounded-full bg-sport-yellow-light px-2.5 text-xs font-medium">
+                              +{game.registeredPlayers.length - 1}
+                            </span>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
 

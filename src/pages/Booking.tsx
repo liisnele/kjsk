@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useLang } from "@/contexts/LanguageContext";
-import { sports, sportCenters, sportPrices, equipmentPrices, getEquipmentName, generateTimeSlots, Booking } from "@/data/mockData";
+import { sports, sportCenters, sportPrices, equipmentPrices, generateTimeSlots, getBookingsFromStorage, Booking } from "@/data/mockData";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedDuration, setSelectedDuration] = useState(1);
   const [selectedCourt, setSelectedCourt] = useState("");
+  const [bookings] = useState(() => getBookingsFromStorage());
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -58,8 +59,8 @@ export default function BookingPage() {
 
   const timeSlots = useMemo(() => {
     if (!selectedCenter || !selectedSport) return [];
-    return generateTimeSlots(dateStr, selectedCenter, selectedSport);
-  }, [dateStr, selectedCenter, selectedSport]);
+    return generateTimeSlots(dateStr, selectedCenter, selectedSport, bookings);
+  }, [dateStr, selectedCenter, selectedSport, bookings]);
 
   const selectedSportData = sports.find((s) => s.id === selectedSport);
   const selectedCenterData = sportCenters.find((c) => c.id === selectedCenter);
@@ -459,7 +460,7 @@ export default function BookingPage() {
                               : "bg-secondary hover:bg-secondary/80"
                           )}
                         >
-                          {getEquipmentName(eq, lang)} · €{equipmentPrices[eq] || 0}
+                          {t.equipmentNames[eq as keyof typeof t.equipmentNames]} · €{equipmentPrices[eq] || 0}
                         </button>
                       ))}
                     </div>

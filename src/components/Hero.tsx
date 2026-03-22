@@ -17,7 +17,7 @@ export default function Hero() {
           <h1 className="fade-in-up font-display text-4xl font-bold leading-[1.08] tracking-tight text-white md:text-6xl lg:text-7xl text-balance">
             {t.hero.title}
           </h1>
-          <p className="fade-in-up stagger-1 mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/70 text-pretty">
+          <p className="fade-in-up stagger-1 mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/70 text-pretty">
             {t.hero.subtitle}
           </p>
           <div className="fade-in-up stagger-2 mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">

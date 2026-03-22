@@ -18,9 +18,9 @@ export default function Header() {
           <div className="flex items-center justify-center rounded-xl bg-primary font-display text-lg font-bold text-primary-foreground">
             {/* Mobile logo */}
             <img
-              src="/logo_must.png"
+              src="/kj-vapp-must-mobile.svg"
               alt="Logo"
-              className="block h-10 w-10 object-contain sm:hidden"
+              className="block h-11 w-11 object-contain sm:hidden"
             />
 
             {/* Desktop logo */}
@@ -44,7 +44,14 @@ export default function Header() {
           <Link to="/play-together" className={linkClass("/play-together") + " text-center"}>
             <span className="block sm:inline whitespace-pre-line">
               {t.nav.playTogether.split(" ").length === 2
-                ? (<><span>{t.nav.playTogether.split(" ")[0]}</span><br className="sm:hidden" /><span>{t.nav.playTogether.split(" ")[1]}</span></>)
+                ? (
+                  <>
+                    <span>{t.nav.playTogether.split(" ")[0]}</span>
+                    <span className="sm:hidden"><br /></span>
+                    <span className="hidden sm:inline"> </span>
+                    <span>{t.nav.playTogether.split(" ")[1]}</span>
+                  </>
+                )
                 : t.nav.playTogether}
             </span>
           </Link>

@@ -35,7 +35,7 @@ export default function BookingPage() {
     name: "",
     email: "",
     phone: "",
-    participants: "",
+    participants: 1,
     equipment: [] as string[],
     note: "",
   });
@@ -99,7 +99,7 @@ export default function BookingPage() {
 
   const canProceed = () => {
     switch (step) {
-      case 1: return startMode === "sport" ? !!selectedSport : !!selectedCenter;
+      case 1: return true; // Always allow Next on first step
       case 2: return startMode === "sport" ? !!selectedCenter : !!selectedSport;
       case 3: return !!selectedTime && !!selectedCourt;
       case 4: return !!form.name && !!form.email && !!form.phone;
@@ -108,6 +108,31 @@ export default function BookingPage() {
   };
 
   const goNext = () => {
+    if (step === 1) {
+      // If user hasn't picked a mode, auto-select 'sport' and the first available sport
+      if (!startMode) {
+        setStartMode("sport");
+        if (!selectedSport && sports.length > 0) {
+          setSelectedSport(sports[0].id);
+        }
+        setTimeout(() => setStep(2), 0);
+        return;
+      }
+      // If mode is 'sport' but no sport selected, auto-select first
+      if (startMode === "sport" && !selectedSport && sports.length > 0) {
+        setSelectedSport(sports[0].id);
+        setTimeout(() => setStep(2), 0);
+        return;
+      }
+      // If mode is 'center' but no center selected, auto-select first
+      if (startMode === "center" && !selectedCenter && sportCenters.length > 0) {
+        setSelectedCenter(sportCenters[0].id);
+        setTimeout(() => setStep(2), 0);
+        return;
+      }
+      setStep(2);
+      return;
+    }
     if (canProceed()) setStep(step + 1);
   };
 
@@ -325,6 +350,7 @@ export default function BookingPage() {
                   onSelect={(d) => d && setSelectedDate(d)}
                   locale={et}
                   className="rounded-2xl border border-border bg-card p-4 pointer-events-auto"
+                  disabled={{ before: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) }}
                 />
 
                 {/* Duration */}
@@ -433,20 +459,16 @@ export default function BookingPage() {
                   min={1}
                   max={50}
                   placeholder={t.booking.participantsPlaceholder}
-                  value={form.participants === 0 ? "" : form.participants}
+                  value={form.participants}
                   onChange={(e) => {
-                    let val = e.target.value;
-                    if (val === "") {
-                      setForm({ ...form, participants: "" });
-                    } else {
-                      let num = Number(val);
-                      if (num < 1) num = 1;
-                      if (num > 50) num = 50;
-                      setForm({ ...form, participants: num });
-                    }
+                    let num = Number(e.target.value);
+                    if (isNaN(num) || num < 1) num = 1;
+                    if (num > 50) num = 50;
+                    setForm({ ...form, participants: num });
                   }}
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
+
 
                 {/* Equipment */}
                 {selectedSportData && selectedSportData.equipmentOptions.length > 0 && (
@@ -518,6 +540,10 @@ export default function BookingPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t.booking.participants}</span>
+                    <span className="font-medium">{form.participants}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.fullName}</span>
                     <span className="font-medium">{form.name}</span>
                   </div>
@@ -575,11 +601,11 @@ export default function BookingPage() {
             </button>
             {step < 4 ? (
               <button
-                disabled={!canProceed()}
+                disabled={step > 1 && !canProceed()}
                 onClick={goNext}
                 className={cn(
                   "flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-95",
-                  canProceed()
+                  step === 1 || canProceed()
                     ? "bg-primary text-primary-foreground hover:brightness-105"
                     : "cursor-not-allowed bg-secondary text-muted-foreground"
                 )}

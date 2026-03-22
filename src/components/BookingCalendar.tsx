@@ -50,6 +50,7 @@ export default function BookingCalendar() {
                 onSelect={(d) => d && setSelectedDate(d)}
                 locale={et}
                 className="pointer-events-auto"
+                disabled={{ before: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) }}
               />
             </div>
 

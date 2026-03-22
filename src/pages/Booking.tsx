@@ -35,7 +35,7 @@ export default function BookingPage() {
     name: "",
     email: "",
     phone: "",
-    participants: 1,
+      participants: "" as number | "",
     equipment: [] as string[],
     note: "",
   });
@@ -88,7 +88,7 @@ export default function BookingPage() {
       name: form.name,
       email: form.email,
       phone: form.phone,
-      participants: form.participants,
+      participants: form.participants === "" ? 1 : Number(form.participants),
       status: "confirmed",
       courtId: selectedCourt,
     };
@@ -461,10 +461,15 @@ export default function BookingPage() {
                   placeholder={t.booking.participantsPlaceholder}
                   value={form.participants}
                   onChange={(e) => {
-                    let num = Number(e.target.value);
-                    if (isNaN(num) || num < 1) num = 1;
-                    if (num > 50) num = 50;
-                    setForm({ ...form, participants: num });
+                    const val = e.target.value;
+                    if (val === "") {
+                      setForm({ ...form, participants: "" });
+                    } else {
+                      let num = Number(val);
+                      if (num < 1) num = 1;
+                      if (num > 50) num = 50;
+                      setForm({ ...form, participants: num });
+                    }
                   }}
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />

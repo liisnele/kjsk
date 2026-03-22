@@ -146,12 +146,12 @@ export default function PlayTogetherPage() {
 
   const handleCreateGame = () => {
     const minPlayers = Math.max(2, createForm.minPlayers === "" ? 2 : Number(createForm.minPlayers));
-    const maxPlayers = Math.min(26, createForm.maxPlayers === "" ? 10 : Number(createForm.maxPlayers));
+    const maxPlayers = createForm.maxPlayers === "" ? 10 : Number(createForm.maxPlayers);
 
     if (
       !createForm.sportId || !createForm.centerId || !createForm.courtId ||
       !createForm.date || !createForm.time || !createForm.creatorName || !createForm.description ||
-      minPlayers < 2 || maxPlayers < minPlayers || maxPlayers > 26
+      minPlayers < 2 || maxPlayers < minPlayers || maxPlayers > 30
     ) return;
 
     const newGame: OpenGame = {
@@ -417,22 +417,20 @@ export default function PlayTogetherPage() {
                 value={createForm.minPlayers}
                 onChange={(e) => {
                   let val = e.target.value === "" ? "" : Number(e.target.value);
-                  if (val !== "" && val < 2) val = 2;
-                  if (val !== "" && val > 26) val = 26;
+                  if (typeof val === "number" && val < 2) val = 2;
+                  if (typeof val === "number" && val > 26) val = 26;
                   setCreateForm({ ...createForm, minPlayers: val });
                 }}
                 className={inputCls}
               />
               <input
                 type="number"
-                min={2}
-                max={26}
+                max={30}
                 placeholder={t.playTogether.maxPlayersPlaceholder}
                 value={createForm.maxPlayers}
                 onChange={(e) => {
                   let val = e.target.value === "" ? "" : Number(e.target.value);
-                  if (val !== "" && val < 2) val = 2;
-                  if (val !== "" && val > 26) val = 26;
+                  if (typeof val === "number" && val > 30) val = 30;
                   setCreateForm({ ...createForm, maxPlayers: val });
                 }}
                 className={inputCls}
@@ -488,7 +486,7 @@ export default function PlayTogetherPage() {
                 !createForm.sportId || !createForm.centerId || !createForm.courtId || 
                 !createForm.date || !createForm.time || !createForm.creatorName || !createForm.description ||
                 (createForm.minPlayers !== "" && Number(createForm.minPlayers) < 2) ||
-                (createForm.maxPlayers !== "" && Number(createForm.maxPlayers) > 26) ||
+                (createForm.maxPlayers !== "" && Number(createForm.maxPlayers) > 30) ||
                 (createForm.maxPlayers !== "" && createForm.minPlayers !== "" && Number(createForm.maxPlayers) < Number(createForm.minPlayers))
               }
               className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"

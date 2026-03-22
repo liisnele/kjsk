@@ -456,7 +456,7 @@ export const mockGames: OpenGame[] = [
     equipment: [],
   },
   {
-    id: "g2",
+    id: "g5",
     sportId: "volleyball",
     centerId: "spordihoone",
     courtId: "s2",
@@ -508,7 +508,7 @@ export const mockGames: OpenGame[] = [
     equipment: ["stick", "helmet", "pads"],
   },
   {
-    id: "g5",
+    id: "g2",
     sportId: "tennis",
     centerId: "spordihoone",
     courtId: "s3",

@@ -1,8 +1,8 @@
 # Welcome to team LIIK
 Project for kood/Garage48 Empowering Women Hackathon
-created by Anastassia Tihhomirova (marketing), Nele-Liis Võhma (developing), Ilona Maharramova (idea owner)
+created by Anastassia Tihhomirova (marketing), Ilona Maharramova (idea owner), Nele-Liis Võhma (developing).
 
-The platform not only allows locals to ginally book courts directly from the centre's homepage but introduces a social feature that allows users to join or create sports games (e.g., basketball, badminton), transforming the system from a booking tool into a community-driven service.
+The platform not only allows locals to finally book courts directly from the centre's homepage but introduces a social feature that allows users to join or create sports games (e.g., basketball, badminton), transforming the system from a booking tool into a community-driven service.
 
 The project was the winner of kood/Garage48 Empowering Women Hackathon.
 

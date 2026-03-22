@@ -133,8 +133,8 @@ const translations = {
   },
   en: {
     hero: {
-      title: "Kohtla-Järve Sports Center",
-      subtitle: "Kohtla-Järve Sports Center is a versatile and evolving sports environment that unites various sports facilities, disciplines, and opportunities into one cohesive whole.",
+      title: "Kohtla-Järve Spordikeskus",
+      subtitle: "Kohtla-Järve Spordikeskus is a versatile and evolving sports environment that unites various sports facilities, disciplines, and opportunities into one cohesive whole.",
       cta: "Book Now",
       ctaSecondary: "Sports",
     },

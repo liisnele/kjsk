@@ -1,13 +1,18 @@
-import { useState, useMemo } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { useLang } from "@/contexts/LanguageContext";
-import { sports, sportCenters, sportPrices, equipmentPrices, generateTimeSlots, getBookingsFromStorage, Booking } from "@/data/mockData";
-import { Calendar } from "@/components/ui/calendar";
+import { useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Check, MapPin, Star, ArrowLeft, ArrowRight } from "lucide-react";
-import Header from "@/components/Header";
 import { et } from "date-fns/locale";
+import { ArrowLeft, ArrowRight, Check, MapPin, Star } from "lucide-react";
+import Header from "@/components/Header";
+import { Calendar } from "@/components/ui/calendar";
+import { useLang } from "@/contexts/LanguageContext";
+import {
+  useBookingsQuery,
+  useCatalogQuery,
+  useCreateBookingMutation,
+} from "@/hooks/use-api-data";
+import { generateTimeSlots } from "@/lib/availability";
+import { cn } from "@/lib/utils";
 
 type StartMode = "sport" | "center" | null;
 
@@ -15,11 +20,22 @@ export default function BookingPage() {
   const { lang, t } = useLang();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { data: catalog, isLoading } = useCatalogQuery();
+  const { data: bookings = [] } = useBookingsQuery();
+  const createBookingMutation = useCreateBookingMutation();
 
-  // Determine initial state from URL params
+  const sports = catalog?.sports ?? [];
+  const sportCenters = catalog?.sportCenters ?? [];
+  const sportPrices = catalog?.sportPrices ?? {};
+  const equipmentPrices = catalog?.equipmentPrices ?? {};
+
   const initialSport = searchParams.get("sport") || "";
   const initialCenter = searchParams.get("center") || "";
-  const initialMode: StartMode = initialSport ? "sport" : initialCenter ? "center" : null;
+  const initialMode: StartMode = initialSport
+    ? "sport"
+    : initialCenter
+      ? "center"
+      : null;
   const initialStep = initialSport || initialCenter ? 2 : 1;
 
   const [startMode, setStartMode] = useState<StartMode>(initialMode);
@@ -30,58 +46,122 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedDuration, setSelectedDuration] = useState(1);
   const [selectedCourt, setSelectedCourt] = useState("");
-  const [bookings] = useState(() => getBookingsFromStorage());
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
-      participants: "" as number | "",
+    participants: "" as number | "",
     equipment: [] as string[],
     note: "",
   });
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
 
-  const stepLabels = [t.booking.step1, t.booking.step2, t.booking.step3, t.booking.step4, t.booking.step5];
+  const stepLabels = [
+    t.booking.step1,
+    t.booking.step2,
+    t.booking.step3,
+    t.booking.step4,
+    t.booking.step5,
+  ];
 
-  // Centers available for selected sport
   const availableCenters = useMemo(() => {
     if (!selectedSport) return sportCenters;
-    return sportCenters.filter((c) => c.sportIds.includes(selectedSport));
-  }, [selectedSport]);
+    return sportCenters.filter((center) => center.sportIds.includes(selectedSport));
+  }, [selectedSport, sportCenters]);
 
-  // Sports available at selected center
   const availableSports = useMemo(() => {
     if (!selectedCenter) return sports;
-    const center = sportCenters.find((c) => c.id === selectedCenter);
-    return center ? sports.filter((s) => center.sportIds.includes(s.id)) : sports;
-  }, [selectedCenter]);
+    const center = sportCenters.find((item) => item.id === selectedCenter);
+    return center
+      ? sports.filter((sport) => center.sportIds.includes(sport.id))
+      : sports;
+  }, [selectedCenter, sportCenters, sports]);
 
   const timeSlots = useMemo(() => {
     if (!selectedCenter || !selectedSport) return [];
-    return generateTimeSlots(dateStr, selectedCenter, selectedSport, bookings);
-  }, [dateStr, selectedCenter, selectedSport, bookings]);
+    return generateTimeSlots(
+      dateStr,
+      selectedCenter,
+      selectedSport,
+      sportCenters,
+      bookings,
+    );
+  }, [bookings, dateStr, selectedCenter, selectedSport, sportCenters]);
 
-  const selectedSportData = sports.find((s) => s.id === selectedSport);
-  const selectedCenterData = sportCenters.find((c) => c.id === selectedCenter);
+  const selectedSportData = sports.find((sport) => sport.id === selectedSport);
+  const selectedCenterData = sportCenters.find((center) => center.id === selectedCenter);
+  const courtsForSport =
+    selectedCenterData?.courts.filter((court) => court.sportId === selectedSport) ?? [];
 
-  const courtsForSport = selectedCenterData?.courts.filter(
-    (c) => c.sportId === selectedSport
-  ) || [];
+  const effectiveCourtId = selectedCourt || courtsForSport[0]?.id || "";
 
-  const equipmentTotal = useMemo(() => {
-    return form.equipment.reduce((total, eq) => total + (equipmentPrices[eq] || 0), 0);
-  }, [form.equipment]);
+  const equipmentTotal = useMemo(
+    () =>
+      form.equipment.reduce(
+        (total, item) => total + (equipmentPrices[item] || 0),
+        0,
+      ),
+    [equipmentPrices, form.equipment],
+  );
 
-  const totalPrice = useMemo(() => {
-    return sportPrices[selectedSport] * selectedDuration + equipmentTotal;
-  }, [selectedSport, selectedDuration, equipmentTotal]);
+  const totalPrice = useMemo(
+    () => (sportPrices[selectedSport] || 0) * selectedDuration + equipmentTotal,
+    [equipmentTotal, selectedDuration, selectedSport, sportPrices],
+  );
 
-  const handleConfirm = () => {
-    const booking: Booking = {
-      id: `b${Date.now()}`,
+  const canProceed = () => {
+    switch (step) {
+      case 1:
+        return true;
+      case 2:
+        return startMode === "sport" ? !!selectedCenter : !!selectedSport;
+      case 3:
+        return !!selectedTime && !!effectiveCourtId;
+      case 4:
+        return !!form.name && !!form.email && !!form.phone;
+      default:
+        return false;
+    }
+  };
+
+  const goNext = () => {
+    if (step === 1) {
+      if (!startMode) {
+        setStartMode("sport");
+        if (!selectedSport && sports.length > 0) {
+          setSelectedSport(sports[0].id);
+        }
+        setStep(2);
+        return;
+      }
+
+      if (startMode === "sport" && !selectedSport && sports.length > 0) {
+        setSelectedSport(sports[0].id);
+      }
+
+      if (startMode === "center" && !selectedCenter && sportCenters.length > 0) {
+        setSelectedCenter(sportCenters[0].id);
+      }
+
+      setStep(2);
+      return;
+    }
+
+    if (canProceed()) {
+      setStep(step + 1);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!effectiveCourtId) {
+      return;
+    }
+
+    await createBookingMutation.mutateAsync({
       sportId: selectedSport,
       centerId: selectedCenter,
+      courtId: effectiveCourtId,
       date: dateStr,
       time: selectedTime,
       duration: selectedDuration,
@@ -89,52 +169,21 @@ export default function BookingPage() {
       email: form.email,
       phone: form.phone,
       participants: form.participants === "" ? 1 : Number(form.participants),
-      status: "confirmed",
-      courtId: selectedCourt,
-    };
-    const existing = JSON.parse(localStorage.getItem("bookings") || "[]");
-    localStorage.setItem("bookings", JSON.stringify([...existing, booking]));
+      equipment: form.equipment,
+      note: form.note,
+    });
+
     setStep(5);
   };
 
-  const canProceed = () => {
-    switch (step) {
-      case 1: return true; // Always allow Next on first step
-      case 2: return startMode === "sport" ? !!selectedCenter : !!selectedSport;
-      case 3: return !!selectedTime && !!selectedCourt;
-      case 4: return !!form.name && !!form.email && !!form.phone;
-      default: return false;
-    }
-  };
-
-  const goNext = () => {
-    if (step === 1) {
-      // If user hasn't picked a mode, auto-select 'sport' and the first available sport
-      if (!startMode) {
-        setStartMode("sport");
-        if (!selectedSport && sports.length > 0) {
-          setSelectedSport(sports[0].id);
-        }
-        setTimeout(() => setStep(2), 0);
-        return;
-      }
-      // If mode is 'sport' but no sport selected, auto-select first
-      if (startMode === "sport" && !selectedSport && sports.length > 0) {
-        setSelectedSport(sports[0].id);
-        setTimeout(() => setStep(2), 0);
-        return;
-      }
-      // If mode is 'center' but no center selected, auto-select first
-      if (startMode === "center" && !selectedCenter && sportCenters.length > 0) {
-        setSelectedCenter(sportCenters[0].id);
-        setTimeout(() => setStep(2), 0);
-        return;
-      }
-      setStep(2);
-      return;
-    }
-    if (canProceed()) setStep(step + 1);
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container py-10 text-muted-foreground">Loading booking data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -142,40 +191,37 @@ export default function BookingPage() {
       <div className="container py-8 md:py-12">
         <h1 className="font-display text-3xl font-bold">{t.booking.title}</h1>
 
-        {/* Stepper */}
         <div className="mt-8 flex items-center gap-2">
-          {stepLabels.map((label, i) => (
-            <div key={i} className="flex items-center gap-2">
+          {stepLabels.map((label, index) => (
+            <div key={label} className="flex items-center gap-2">
               <div
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors",
-                  i + 1 < step
+                  index + 1 < step
                     ? "bg-sport-dark text-white"
-                    : i + 1 === step
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground"
+                    : index + 1 === step
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground",
                 )}
               >
-                {i + 1 < step ? <Check className="h-4 w-4" /> : i + 1}
+                {index + 1 < step ? <Check className="h-4 w-4" /> : index + 1}
               </div>
               <span
                 className={cn(
                   "hidden text-sm font-medium md:block",
-                  i + 1 === step ? "text-foreground" : "text-muted-foreground"
+                  index + 1 === step ? "text-foreground" : "text-muted-foreground",
                 )}
               >
                 {label}
               </span>
-              {i < stepLabels.length - 1 && (
+              {index < stepLabels.length - 1 && (
                 <div className="mx-1 h-px w-6 bg-border md:w-12" />
               )}
             </div>
           ))}
         </div>
 
-        {/* Step content */}
         <div className="mt-10">
-          {/* STEP 1: Choose mode + first selection */}
           {step === 1 && (
             <div>
               {!startMode && (
@@ -200,7 +246,9 @@ export default function BookingPage() {
 
               {startMode === "sport" && (
                 <div>
-                  <h2 className="mb-6 font-display text-xl font-semibold">{t.booking.selectSport}</h2>
+                  <h2 className="mb-6 font-display text-xl font-semibold">
+                    {t.booking.selectSport}
+                  </h2>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
                     {sports.map((sport) => (
                       <button
@@ -208,7 +256,8 @@ export default function BookingPage() {
                         onClick={() => setSelectedSport(sport.id)}
                         className={cn(
                           "sport-card flex flex-col items-center gap-2 py-5",
-                          selectedSport === sport.id && "ring-2 ring-primary bg-sport-yellow-light"
+                          selectedSport === sport.id &&
+                            "ring-2 ring-primary bg-sport-yellow-light",
                         )}
                       >
                         <span className="text-2xl">{sport.icon}</span>
@@ -216,7 +265,7 @@ export default function BookingPage() {
                           {t.sportNames[sport.key as keyof typeof t.sportNames]}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          €{sportPrices[sport.id]}/h
+                          €{sport.hourlyPrice}/h
                         </span>
                       </button>
                     ))}
@@ -226,7 +275,9 @@ export default function BookingPage() {
 
               {startMode === "center" && (
                 <div>
-                  <h2 className="mb-6 font-display text-xl font-semibold">{t.booking.selectCenter}</h2>
+                  <h2 className="mb-6 font-display text-xl font-semibold">
+                    {t.booking.selectCenter}
+                  </h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     {sportCenters.map((center) => (
                       <button
@@ -234,7 +285,8 @@ export default function BookingPage() {
                         onClick={() => setSelectedCenter(center.id)}
                         className={cn(
                           "sport-card text-left",
-                          selectedCenter === center.id && "ring-2 ring-primary bg-sport-yellow-light"
+                          selectedCenter === center.id &&
+                            "ring-2 ring-primary bg-sport-yellow-light",
                         )}
                       >
                         <h3 className="font-display font-semibold">{center.name}</h3>
@@ -242,7 +294,9 @@ export default function BookingPage() {
                           <MapPin className="h-3.5 w-3.5" />
                           {center.location}
                         </div>
-                        <p className="mt-2 text-sm text-muted-foreground">{center.description[lang]}</p>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {center.description[lang]}
+                        </p>
                         <div className="mt-3 flex items-center gap-1 text-sm font-medium">
                           <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                           {center.rating}
@@ -255,25 +309,28 @@ export default function BookingPage() {
             </div>
           )}
 
-          {/* STEP 2: second selection (opposite of step 1) */}
           {step === 2 && startMode === "sport" && (
             <div>
-              <h2 className="mb-6 font-display text-xl font-semibold">{t.booking.selectCenter}</h2>
+              <h2 className="mb-6 font-display text-xl font-semibold">
+                {t.booking.selectCenter}
+              </h2>
               {availableCenters.length === 0 ? (
                 <p className="text-muted-foreground">{t.booking.noResults}</p>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {availableCenters.map((center) => {
                     const courtsCount = center.courts.filter(
-                      (c) => c.sportId === selectedSport
+                      (court) => court.sportId === selectedSport,
                     ).length;
+
                     return (
                       <button
                         key={center.id}
                         onClick={() => setSelectedCenter(center.id)}
                         className={cn(
                           "sport-card text-left",
-                          selectedCenter === center.id && "ring-2 ring-primary bg-sport-yellow-light"
+                          selectedCenter === center.id &&
+                            "ring-2 ring-primary bg-sport-yellow-light",
                         )}
                       >
                         <div className="flex items-start justify-between">
@@ -289,13 +346,22 @@ export default function BookingPage() {
                             {center.rating}
                           </div>
                         </div>
-                        <p className="mt-2 text-sm text-muted-foreground">{center.description[lang]}</p>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {center.description[lang]}
+                        </p>
                         <div className="mt-3 flex items-center gap-3 text-sm">
-                          <span className="font-medium">€{sportPrices[selectedSport]}/h</span>
+                          <span className="font-medium">
+                            €{sportPrices[selectedSport] || 0}/h
+                          </span>
                           <span className="text-muted-foreground">
-                            {courtsCount} {lang === "et"
-                              ? (courtsCount === 1 ? "väljak" : "väljakut")
-                              : (courtsCount === 1 ? "court" : "courts")}
+                            {courtsCount}{" "}
+                            {lang === "et"
+                              ? courtsCount === 1
+                                ? "väljak"
+                                : "väljakut"
+                              : courtsCount === 1
+                                ? "court"
+                                : "courts"}
                           </span>
                         </div>
                       </button>
@@ -308,19 +374,24 @@ export default function BookingPage() {
 
           {step === 2 && startMode === "center" && (
             <div>
-              <h2 className="mb-6 font-display text-xl font-semibold">{t.booking.selectSport}</h2>
+              <h2 className="mb-6 font-display text-xl font-semibold">
+                {t.booking.selectSport}
+              </h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
                 {availableSports.map((sport) => {
-                  const courtsCount = selectedCenterData?.courts.filter(
-                    (c) => c.sportId === sport.id
-                  ).length || 0;
+                  const courtsCount =
+                    selectedCenterData?.courts.filter(
+                      (court) => court.sportId === sport.id,
+                    ).length || 0;
+
                   return (
                     <button
                       key={sport.id}
                       onClick={() => setSelectedSport(sport.id)}
                       className={cn(
                         "sport-card flex flex-col items-center gap-2 py-5",
-                        selectedSport === sport.id && "ring-2 ring-primary bg-sport-yellow-light"
+                        selectedSport === sport.id &&
+                          "ring-2 ring-primary bg-sport-yellow-light",
                       )}
                     >
                       <span className="text-2xl">{sport.icon}</span>
@@ -328,9 +399,14 @@ export default function BookingPage() {
                         {t.sportNames[sport.key as keyof typeof t.sportNames]}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        €{sportPrices[sport.id]}/h · {courtsCount} {lang === "et"
-                          ? (courtsCount === 1 ? "väljak" : "väljakut")
-                          : (courtsCount === 1 ? "court" : "courts")}
+                        €{sport.hourlyPrice}/h · {courtsCount}{" "}
+                        {lang === "et"
+                          ? courtsCount === 1
+                            ? "väljak"
+                            : "väljakut"
+                          : courtsCount === 1
+                            ? "court"
+                            : "courts"}
                       </span>
                     </button>
                   );
@@ -339,36 +415,44 @@ export default function BookingPage() {
             </div>
           )}
 
-          {/* STEP 3: Date & Time */}
           {step === 3 && (
             <div className="flex flex-col gap-8 lg:flex-row">
               <div>
-                <h2 className="mb-4 font-display text-xl font-semibold">{t.booking.selectDate}</h2>
+                <h2 className="mb-4 font-display text-xl font-semibold">
+                  {t.booking.selectDate}
+                </h2>
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(d) => d && setSelectedDate(d)}
+                  onSelect={(date) => date && setSelectedDate(date)}
                   locale={et}
-                  className="rounded-2xl border border-border bg-card p-4 pointer-events-auto"
-                  disabled={{ before: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) }}
+                  className="pointer-events-auto rounded-2xl border border-border bg-card p-4"
+                  disabled={{
+                    before: new Date(
+                      new Date().getFullYear(),
+                      new Date().getMonth(),
+                      new Date().getDate(),
+                    ),
+                  }}
                 />
 
-                {/* Duration */}
                 <div className="mt-4">
-                  <label className="mb-2 block text-sm font-medium">{t.booking.timeBlock}</label>
+                  <label className="mb-2 block text-sm font-medium">
+                    {t.booking.timeBlock}
+                  </label>
                   <div className="flex gap-2">
-                    {[1, 2, 3, 4].map((h) => (
+                    {[1, 2, 3, 4].map((hours) => (
                       <button
-                        key={h}
-                        onClick={() => setSelectedDuration(h)}
+                        key={hours}
+                        onClick={() => setSelectedDuration(hours)}
                         className={cn(
                           "rounded-lg px-4 py-2 text-sm font-medium transition-all active:scale-95",
-                          selectedDuration === h
+                          selectedDuration === hours
                             ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-foreground hover:bg-secondary/80"
+                            : "bg-secondary text-foreground hover:bg-secondary/80",
                         )}
                       >
-                        {h} {t.booking.hours}
+                        {hours} {t.booking.hours}
                       </button>
                     ))}
                   </div>
@@ -376,9 +460,10 @@ export default function BookingPage() {
               </div>
 
               <div className="flex-1">
-                <h2 className="mb-4 font-display text-xl font-semibold">{t.booking.selectTime}</h2>
+                <h2 className="mb-4 font-display text-xl font-semibold">
+                  {t.booking.selectTime}
+                </h2>
 
-                {/* Court selector */}
                 {courtsForSport.length > 1 && (
                   <div className="mb-4 flex flex-wrap gap-2">
                     {courtsForSport.map((court) => (
@@ -390,9 +475,9 @@ export default function BookingPage() {
                         }}
                         className={cn(
                           "rounded-lg px-3 py-1.5 text-sm font-medium transition-all active:scale-95",
-                          selectedCourt === court.id
+                          effectiveCourtId === court.id
                             ? "bg-sport-dark text-white"
-                            : "bg-secondary hover:bg-secondary/80"
+                            : "bg-secondary hover:bg-secondary/80",
                         )}
                       >
                         {court.name}
@@ -401,16 +486,12 @@ export default function BookingPage() {
                   </div>
                 )}
 
-                {/* Auto select first court */}
-                {courtsForSport.length === 1 && !selectedCourt && (() => { setSelectedCourt(courtsForSport[0].id); return null; })()}
-
-                {/* Time grid */}
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-7">
                   {timeSlots
-                    .filter((s) => s.courtId === (selectedCourt || courtsForSport[0]?.id))
+                    .filter((slot) => slot.courtId === effectiveCourtId)
                     .map((slot) => (
                       <button
-                        key={slot.time}
+                        key={`${slot.courtId}-${slot.time}`}
                         disabled={!slot.available}
                         onClick={() => setSelectedTime(slot.time)}
                         className={cn(
@@ -418,8 +499,8 @@ export default function BookingPage() {
                           !slot.available
                             ? "cursor-not-allowed bg-secondary/50 text-muted-foreground/40 line-through"
                             : selectedTime === slot.time
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-card border border-border hover:bg-secondary active:scale-95"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-card border border-border hover:bg-secondary active:scale-95",
                         )}
                       >
                         {slot.time}
@@ -430,28 +511,29 @@ export default function BookingPage() {
             </div>
           )}
 
-          {/* STEP 4: Form */}
           {step === 4 && (
             <div className="mx-auto max-w-lg">
-              <h2 className="mb-6 font-display text-xl font-semibold">{t.booking.step4}</h2>
+              <h2 className="mb-6 font-display text-xl font-semibold">
+                {t.booking.step4}
+              </h2>
               <div className="flex flex-col gap-4">
                 <input
                   placeholder={t.booking.fullName}
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 <input
                   type="email"
                   placeholder={t.booking.email}
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onChange={(event) => setForm({ ...form, email: event.target.value })}
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 <input
                   placeholder={t.booking.phone}
                   value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  onChange={(event) => setForm({ ...form, phone: event.target.value })}
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 <input
@@ -460,46 +542,48 @@ export default function BookingPage() {
                   max={50}
                   placeholder={t.booking.participantsPlaceholder}
                   value={form.participants}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === "") {
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    if (value === "") {
                       setForm({ ...form, participants: "" });
-                    } else {
-                      let num = Number(val);
-                      if (num < 1) num = 1;
-                      if (num > 50) num = 50;
-                      setForm({ ...form, participants: num });
+                      return;
                     }
+
+                    let participants = Number(value);
+                    if (participants < 1) participants = 1;
+                    if (participants > 50) participants = 50;
+                    setForm({ ...form, participants });
                   }}
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
 
-
-                {/* Equipment */}
                 {selectedSportData && selectedSportData.equipmentOptions.length > 0 && (
                   <div>
-                    <label className="mb-2 block text-sm font-medium">{t.booking.equipment}</label>
+                    <label className="mb-2 block text-sm font-medium">
+                      {t.booking.equipment}
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {selectedSportData.equipmentOptions.map((eq) => (
+                      {selectedSportData.equipmentOptions.map((equipmentId) => (
                         <button
-                          key={eq}
+                          key={equipmentId}
                           type="button"
                           onClick={() => {
                             setForm({
                               ...form,
-                              equipment: form.equipment.includes(eq)
-                                ? form.equipment.filter((e) => e !== eq)
-                                : [...form.equipment, eq],
+                              equipment: form.equipment.includes(equipmentId)
+                                ? form.equipment.filter((item) => item !== equipmentId)
+                                : [...form.equipment, equipmentId],
                             });
                           }}
                           className={cn(
                             "rounded-lg px-3 py-1.5 text-sm font-medium transition-all active:scale-95",
-                            form.equipment.includes(eq)
+                            form.equipment.includes(equipmentId)
                               ? "bg-primary text-primary-foreground"
-                              : "bg-secondary hover:bg-secondary/80"
+                              : "bg-secondary hover:bg-secondary/80",
                           )}
                         >
-                          {t.equipmentNames[eq as keyof typeof t.equipmentNames]} · €{equipmentPrices[eq] || 0}
+                          {t.equipmentNames[equipmentId as keyof typeof t.equipmentNames]} · €
+                          {equipmentPrices[equipmentId] || 0}
                         </button>
                       ))}
                     </div>
@@ -509,21 +593,22 @@ export default function BookingPage() {
                 <textarea
                   placeholder={t.booking.note}
                   value={form.note}
-                  onChange={(e) => setForm({ ...form, note: e.target.value })}
+                  onChange={(event) => setForm({ ...form, note: event.target.value })}
                   rows={3}
-                  className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring resize-none"
+                  className="resize-none rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
           )}
 
-          {/* STEP 5: Confirmation */}
           {step === 5 && (
             <div className="mx-auto max-w-md text-center">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sport-success/10">
                 <Check className="h-10 w-10 text-sport-success" />
               </div>
-              <h2 className="mt-6 font-display text-2xl font-bold">{t.booking.success}</h2>
+              <h2 className="mt-6 font-display text-2xl font-bold">
+                {t.booking.success}
+              </h2>
               <p className="mt-2 text-muted-foreground">{t.booking.successDesc}</p>
 
               <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-left">
@@ -531,7 +616,10 @@ export default function BookingPage() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.step1}</span>
                     <span className="font-medium">
-                      {selectedSportData?.icon} {t.sportNames[selectedSport as keyof typeof t.sportNames]}
+                      {selectedSportData?.icon}{" "}
+                      {selectedSportData
+                        ? t.sportNames[selectedSportData.key as keyof typeof t.sportNames]
+                        : ""}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -556,7 +644,7 @@ export default function BookingPage() {
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t.booking.courtRental}:</span>
-                        <span>€{sportPrices[selectedSport] * selectedDuration}</span>
+                        <span>€{(sportPrices[selectedSport] || 0) * selectedDuration}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t.booking.equipmentCost}:</span>
@@ -567,9 +655,7 @@ export default function BookingPage() {
                   )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.price}</span>
-                    <span className="font-bold text-foreground">
-                      €{totalPrice}
-                    </span>
+                    <span className="font-bold text-foreground">€{totalPrice}</span>
                   </div>
                 </div>
               </div>
@@ -586,7 +672,6 @@ export default function BookingPage() {
           )}
         </div>
 
-        {/* Navigation */}
         {step >= 1 && step <= 4 && (
           <div className="mt-10 flex justify-between">
             <button
@@ -612,7 +697,7 @@ export default function BookingPage() {
                   "flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-95",
                   step === 1 || canProceed()
                     ? "bg-primary text-primary-foreground hover:brightness-105"
-                    : "cursor-not-allowed bg-secondary text-muted-foreground"
+                    : "cursor-not-allowed bg-secondary text-muted-foreground",
                 )}
               >
                 {t.booking.next}
@@ -620,17 +705,17 @@ export default function BookingPage() {
               </button>
             ) : (
               <button
-                disabled={!canProceed()}
-                onClick={handleConfirm}
+                disabled={!canProceed() || createBookingMutation.isPending}
+                onClick={() => void handleConfirm()}
                 className={cn(
                   "flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-95",
-                  canProceed()
+                  canProceed() && !createBookingMutation.isPending
                     ? "bg-sport-dark text-white hover:bg-sport-dark/90"
-                    : "cursor-not-allowed bg-secondary text-muted-foreground"
+                    : "cursor-not-allowed bg-secondary text-muted-foreground",
                 )}
               >
                 <Check className="h-4 w-4" />
-                {t.booking.confirm}
+                {createBookingMutation.isPending ? "Saving..." : t.booking.confirm}
               </button>
             )}
           </div>

@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BookingStatus {
+  confirmed
+  cancelled
+}
+
+enum SkillLevel {
+  beginner
+  intermediate
+  professional
+}
+
+model Sport {
+  id               String        @id
+  key              String
+  icon             String
+  hourlyPrice      Int
+  equipmentOptions String[]
+  centerLinks      CenterSport[]
+  courts           Court[]
+  bookings         Booking[]
+  openGames        OpenGame[]
+}
+
+model EquipmentItem {
+  id    String @id
+  price Int
+}
+
+model SportCenter {
+  id            String        @id
+  name          String
+  location      String
+  descriptionEt String
+  descriptionEn String
+  rating        Float
+  image         String
+  openingHour   Int
+  closingHour   Int
+  sports        CenterSport[]
+  courts        Court[]
+  bookings      Booking[]
+  openGames     OpenGame[]
+}
+
+model CenterSport {
+  centerId String
+  sportId  String
+  center   SportCenter @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  sport    Sport       @relation(fields: [sportId], references: [id], onDelete: Cascade)
+
+  @@id([centerId, sportId])
+}
+
+model Court {
+  id        String      @id
+  name      String
+  centerId  String
+  sportId   String
+  center    SportCenter @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  sport     Sport       @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  bookings  Booking[]
+  openGames OpenGame[]
+}
+
+model Booking {
+  id           String        @id
+  sportId      String
+  centerId     String
+  courtId      String?
+  date         String
+  time         String
+  duration     Int
+  name         String
+  email        String
+  phone        String
+  participants Int
+  status       BookingStatus
+  note         String?
+  equipment    String[]
+  createdAt    DateTime      @default(now())
+  sport        Sport         @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  center       SportCenter   @relation(fields: [centerId], references: [id], onDelete: Restrict)
+  court        Court?        @relation(fields: [courtId], references: [id], onDelete: SetNull)
+}
+
+model OpenGame {
+  id            String              @id
+  sportId       String
+  centerId      String
+  courtId       String
+  date          String
+  time          String
+  duration      Int
+  description   String
+  level         SkillLevel
+  minPlayers    Int
+  maxPlayers    Int
+  creatorName   String
+  equipment     String[]
+  createdAt     DateTime            @default(now())
+  sport         Sport               @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  center        SportCenter         @relation(fields: [centerId], references: [id], onDelete: Restrict)
+  court         Court               @relation(fields: [courtId], references: [id], onDelete: Restrict)
+  registrations GameRegistration[]
+  waitlist      GameWaitlistEntry[]
+}
+
+model GameRegistration {
+  id        String   @id @default(cuid())
+  gameId    String
+  name      String
+  email     String
+  phone     String
+  createdAt DateTime @default(now())
+  game      OpenGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+model GameWaitlistEntry {
+  id        String   @id @default(cuid())
+  gameId    String
+  name      String
+  email     String
+  phone     String
+  createdAt DateTime @default(now())
+  game      OpenGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}

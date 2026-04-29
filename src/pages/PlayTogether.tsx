@@ -1,30 +1,65 @@
-import { useState } from "react";
-import { useLang } from "@/contexts/LanguageContext";
-import { sports, sportCenters, generateTimeSlots, isDurationAvailable, getAvailableTimesWithMinDuration, mockGames, type OpenGame, type SkillLevel, type Booking } from "@/data/mockData";
+import { useMemo, useState } from "react";
 import Header from "@/components/Header";
+import { useLang } from "@/contexts/LanguageContext";
+import {
+  useBookingsQuery,
+  useCancelGameRegistrationMutation,
+  useCancelWaitlistEntryMutation,
+  useCatalogQuery,
+  useCreateGameMutation,
+  useGamesQuery,
+  useRegisterForGameMutation,
+} from "@/hooks/use-api-data";
+import {
+  getAvailableTimesWithMinDuration,
+  isDurationAvailable,
+} from "@/lib/availability";
 import { cn } from "@/lib/utils";
-import { Users, MapPin, Calendar, Clock, Plus, ArrowRight, X, ChevronDown } from "lucide-react";
+import type { SkillLevel } from "@/types/api";
+import {
+  ArrowRight,
+  Calendar,
+  ChevronDown,
+  Clock,
+  MapPin,
+  Plus,
+  Users,
+  X,
+} from "lucide-react";
+
+const levelLabels: Record<SkillLevel, { et: string; en: string }> = {
+  beginner: { et: "Algaja", en: "Beginner" },
+  intermediate: { et: "Keskmine", en: "Intermediate" },
+  professional: { et: "Edasijõudnud", en: "Professional" },
+};
+
+const levelColors: Record<SkillLevel, string> = {
+  beginner: "bg-sport-success/10 text-sport-success",
+  intermediate: "bg-primary/15 text-primary-foreground",
+  professional: "bg-destructive/10 text-destructive",
+};
 
 export default function PlayTogetherPage() {
   const { lang, t } = useLang();
-  const [games, setGames] = useState<OpenGame[]>(mockGames);
+  const { data: catalog, isLoading: catalogLoading } = useCatalogQuery();
+  const { data: games = [], isLoading: gamesLoading } = useGamesQuery();
+  const { data: bookings = [] } = useBookingsQuery();
+  const createGameMutation = useCreateGameMutation();
+  const registerMutation = useRegisterForGameMutation();
+  const cancelRegistrationMutation = useCancelGameRegistrationMutation();
+  const cancelWaitlistMutation = useCancelWaitlistEntryMutation();
+
+  const sports = catalog?.sports ?? [];
+  const sportCenters = catalog?.sportCenters ?? [];
+
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [registerGameId, setRegisterGameId] = useState<string | null>(null);
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", phone: "" });
+  const [myRegistrations, setMyRegistrations] = useState<Record<string, string>>({});
+  const [myWaitingListEntries, setMyWaitingListEntries] = useState<Record<string, string>>({});
   const [hoveredProgressBar, setHoveredProgressBar] = useState<string | null>(null);
-  const [myRegistrations, setMyRegistrations] = useState<{ [gameId: string]: string }>({});
-  const [waitingList, setWaitingList] = useState<{ [gameId: string]: string[] }>({});
-  const [myWaitingListEntries, setMyWaitingListEntries] = useState<{ [gameId: string]: string }>({});
-  const [bookings, setBookings] = useState<Booking[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("bookings") || "[]");
-    } catch {
-      return [];
-    }
-  });
-
-  // Create form state
   const [createForm, setCreateForm] = useState({
+    creatorName: "",
     sportId: "",
     centerId: "",
     courtId: "",
@@ -35,127 +70,58 @@ export default function PlayTogetherPage() {
     level: "intermediate" as SkillLevel,
     minPlayers: "" as string | number,
     maxPlayers: "" as string | number,
-    creatorName: "",
     equipment: [] as string[],
   });
 
-  // Helper function to check if game is within 24 hours
-  const isWithin24Hours = (gameDate: string, gameTime: string): boolean => {
+  const inputCls =
+    "w-full rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring";
+
+  const centersForCreate = createForm.sportId
+    ? sportCenters.filter((center) => center.sportIds.includes(createForm.sportId))
+    : [];
+  const selectedCenterForCreate = sportCenters.find((center) => center.id === createForm.centerId);
+  const selectedSportForCreate = sports.find((sport) => sport.id === createForm.sportId);
+  const courtsForCreate =
+    selectedCenterForCreate?.courts.filter((court) => court.sportId === createForm.sportId) ?? [];
+
+  const availableTimes = useMemo(() => {
+    if (!createForm.date || !createForm.centerId || !createForm.sportId) return [];
+    return getAvailableTimesWithMinDuration(
+      createForm.date,
+      createForm.centerId,
+      createForm.sportId,
+      1,
+      sportCenters,
+      bookings,
+    );
+  }, [bookings, createForm.centerId, createForm.date, createForm.sportId, sportCenters]);
+
+  const isWithin24Hours = (gameDate: string, gameTime: string) => {
     const now = new Date();
     const gameDateTime = new Date(`${gameDate}T${gameTime}`);
     const hoursUntilGame = (gameDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
     return hoursUntilGame < 24 && hoursUntilGame > 0;
   };
 
-  // Handle player cancellation - only for own registration
-  const handleCancelRegistration = (gameId: string) => {
-    const playerName = myRegistrations[gameId];
-    if (!playerName) return;
-    
-    // Check if there's someone on the waitlist to promote
-    const waitlistForGame = waitingList[gameId];
-    let promotedPlayer: string | null = null;
-    
-    if (waitlistForGame && waitlistForGame.length > 0) {
-      promotedPlayer = waitlistForGame[0];
-    }
-    
-    // Update games and optionally promote from waitlist
-    setGames(games.map((g) =>
-      g.id === gameId
-        ? { 
-            ...g, 
-            registeredPlayers: [
-              ...g.registeredPlayers.filter((p) => p.name !== playerName),
-              ...(promotedPlayer ? [{ name: promotedPlayer }] : [])
-            ]
-          }
-        : g
-    ));
-    
-    // Update waitlist if someone was promoted
-    if (promotedPlayer && waitlistForGame) {
-      const updatedWaitlist = waitlistForGame.slice(1);
-      if (updatedWaitlist.length > 0) {
-        setWaitingList({ ...waitingList, [gameId]: updatedWaitlist });
-      } else {
-        const newWaitingList = { ...waitingList };
-        delete newWaitingList[gameId];
-        setWaitingList(newWaitingList);
-      }
-    }
-    
-    // Remove from myRegistrations
-    const updatedRegistrations = { ...myRegistrations };
-    delete updatedRegistrations[gameId];
-    setMyRegistrations(updatedRegistrations);
-  };
-
-  // Handle waiting list registration
-  const handleWaitingListRegister = (gameId: string, playerName: string) => {
-    const currentList = waitingList[gameId] || [];
-    setWaitingList({ ...waitingList, [gameId]: [...currentList, playerName] });
-    // Track this as my waitinglist entry
-    setMyWaitingListEntries({ ...myWaitingListEntries, [gameId]: playerName });
-  };
-
-  // Handle waiting list cancellation
-  const handleWaitingListCancel = (gameId: string, playerName?: string) => {
-    if (playerName && waitingList[gameId]) {
-      // Remove specific player from waitinglist
-      const updatedList = waitingList[gameId].filter((p) => p !== playerName);
-      if (updatedList.length > 0) {
-        setWaitingList({ ...waitingList, [gameId]: updatedList });
-      } else {
-        const updatedWaitingList = { ...waitingList };
-        delete updatedWaitingList[gameId];
-        setWaitingList(updatedWaitingList);
-      }
-    } else {
-      // Fall back to removing entire game entry
-      const updatedWaitingList = { ...waitingList };
-      delete updatedWaitingList[gameId];
-      setWaitingList(updatedWaitingList);
-    }
-    // Remove from myWaitingListEntries
-    const updatedMyList = { ...myWaitingListEntries };
-    delete updatedMyList[gameId];
-    setMyWaitingListEntries(updatedMyList);
-  };
-
-  const levelLabels: Record<SkillLevel, { et: string; en: string }> = {
-    beginner: { et: "Algaja", en: "Beginner" },
-    intermediate: { et: "Keskmine", en: "Intermediate" },
-    professional: { et: "Edasijõudnud", en: "Professional" },
-  };
-
-  const levelColors: Record<SkillLevel, string> = {
-    beginner: "bg-sport-success/10 text-sport-success",
-    intermediate: "bg-primary/15 text-primary-foreground",
-    professional: "bg-destructive/10 text-destructive",
-  };
-
-  const selectedSportForCreate = sports.find((s) => s.id === createForm.sportId);
-  const centersForCreate = createForm.sportId
-    ? sportCenters.filter((c) => c.sportIds.includes(createForm.sportId))
-    : [];
-  const selectedCenterForCreate = sportCenters.find((c) => c.id === createForm.centerId);
-  const courtsForCreate = selectedCenterForCreate?.courts.filter(
-    (c) => c.sportId === createForm.sportId
-  ) || [];
-
-  const handleCreateGame = () => {
+  const handleCreateGame = async () => {
     const minPlayers = Math.max(2, createForm.minPlayers === "" ? 2 : Number(createForm.minPlayers));
     const maxPlayers = createForm.maxPlayers === "" ? 10 : Number(createForm.maxPlayers);
 
     if (
-      !createForm.sportId || !createForm.centerId || !createForm.courtId ||
-      !createForm.date || !createForm.time || !createForm.creatorName || !createForm.description ||
-      minPlayers < 2 || maxPlayers < minPlayers || maxPlayers > 30
-    ) return;
+      !createForm.creatorName ||
+      !createForm.sportId ||
+      !createForm.centerId ||
+      !createForm.courtId ||
+      !createForm.date ||
+      !createForm.time ||
+      !createForm.description ||
+      maxPlayers < minPlayers
+    ) {
+      return;
+    }
 
-    const newGame: OpenGame = {
-      id: `g${Date.now()}`,
+    await createGameMutation.mutateAsync({
+      creatorName: createForm.creatorName,
       sportId: createForm.sportId,
       centerId: createForm.centerId,
       courtId: createForm.courtId,
@@ -164,61 +130,52 @@ export default function PlayTogetherPage() {
       duration: createForm.duration,
       description: createForm.description,
       level: createForm.level,
-      minPlayers: minPlayers,
-      maxPlayers: maxPlayers,
-      registeredPlayers: [{ name: createForm.creatorName }],
-      creatorName: createForm.creatorName,
+      minPlayers,
+      maxPlayers,
       equipment: createForm.equipment,
-    };
+    });
 
-    // Also save as a booking in localStorage for the calendar
-    const booking: Booking = {
-      id: `b${Date.now()}`,
-      sportId: createForm.sportId,
-      centerId: createForm.centerId,
-      date: createForm.date,
-      time: createForm.time,
-      duration: createForm.duration,
-      name: createForm.creatorName,
-      email: "",
-      phone: "",
-      participants: 1,
-      status: "confirmed",
-      courtId: createForm.courtId,
-    };
-    const newBookings = [...bookings, booking];
-    setBookings(newBookings);
-    localStorage.setItem("bookings", JSON.stringify(newBookings));
-
-    setGames([newGame, ...games]);
     setShowCreateForm(false);
     setCreateForm({
-      sportId: "", centerId: "", courtId: "", date: "", time: "",
-      duration: 1, description: "", level: "intermediate",
-      minPlayers: "", maxPlayers: "", creatorName: "", equipment: [],
+      creatorName: "",
+      sportId: "",
+      centerId: "",
+      courtId: "",
+      date: "",
+      time: "",
+      duration: 1,
+      description: "",
+      level: "intermediate",
+      minPlayers: "",
+      maxPlayers: "",
+      equipment: [],
     });
   };
 
-  const handleRegister = (gameId: string) => {
+  const handleRegister = async (gameId: string, isFull: boolean) => {
     if (!registerForm.name || !registerForm.email || !registerForm.phone) return;
-    setGames(games.map((g) =>
-      g.id === gameId
-        ? { ...g, registeredPlayers: [...g.registeredPlayers, { name: registerForm.name }] }
-        : g
-    ));
-    // Track this registration as "mine"
-    setMyRegistrations({ ...myRegistrations, [gameId]: registerForm.name });
+
+    await registerMutation.mutateAsync({
+      gameId,
+      payload: registerForm,
+    });
+
+    if (isFull) {
+      setMyWaitingListEntries({ ...myWaitingListEntries, [gameId]: registerForm.name });
+    } else {
+      setMyRegistrations({ ...myRegistrations, [gameId]: registerForm.name });
+    }
+
     setRegisterGameId(null);
     setRegisterForm({ name: "", email: "", phone: "" });
   };
 
-  const inputCls = "w-full rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring";
+  const loading = catalogLoading || gamesLoading;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container py-8 md:py-12">
-        {/* Title + Create CTA */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-display text-3xl font-bold">{t.playTogether.title}</h1>
@@ -233,177 +190,160 @@ export default function PlayTogetherPage() {
           </button>
         </div>
 
-        {/* Create Game Form */}
+        {loading && <p className="mt-8 text-muted-foreground">Loading games...</p>}
+
         {showCreateForm && (
           <div className="mt-8 sport-card fade-in-up">
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 flex items-center justify-between">
               <h2 className="font-display text-xl font-semibold">{t.playTogether.createGame}</h2>
               <button onClick={() => setShowCreateForm(false)} className="rounded-lg p-1.5 hover:bg-secondary active:scale-95">
                 <X className="h-5 w-5" />
               </button>
             </div>
+
             <div className="grid gap-4 md:grid-cols-2">
-              {/* Creator name */}
               <input
                 placeholder={t.playTogether.yourName}
                 value={createForm.creatorName}
-                onChange={(e) => setCreateForm({ ...createForm, creatorName: e.target.value })}
+                onChange={(event) => setCreateForm({ ...createForm, creatorName: event.target.value })}
                 className={inputCls}
               />
 
-              {/* Sport */}
               <div className="relative">
                 <select
                   value={createForm.sportId}
-                  onChange={(e) => setCreateForm({ ...createForm, sportId: e.target.value, centerId: "", courtId: "" })}
+                  onChange={(event) =>
+                    setCreateForm({
+                      ...createForm,
+                      sportId: event.target.value,
+                      centerId: "",
+                      courtId: "",
+                      time: "",
+                    })
+                  }
                   className={cn(inputCls, "appearance-none pr-10")}
                 >
                   <option value="">{t.booking.selectSport}</option>
-                  {sports.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.icon} {t.sportNames[s.key as keyof typeof t.sportNames]}
+                  {sports.map((sport) => (
+                    <option key={sport.id} value={sport.id}>
+                      {sport.icon} {t.sportNames[sport.key as keyof typeof t.sportNames]}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               </div>
 
-              {/* Center */}
               <div className="relative">
                 <select
                   value={createForm.centerId}
-                  onChange={(e) => setCreateForm({ ...createForm, centerId: e.target.value, courtId: "" })}
+                  onChange={(event) =>
+                    setCreateForm({ ...createForm, centerId: event.target.value, courtId: "", time: "" })
+                  }
                   disabled={!createForm.sportId}
                   className={cn(inputCls, "appearance-none pr-10 disabled:opacity-50")}
                 >
                   <option value="">{t.booking.selectCenter}</option>
-                  {centersForCreate.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                  {centersForCreate.map((center) => (
+                    <option key={center.id} value={center.id}>
+                      {center.name}
+                    </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               </div>
 
-              {/* Court */}
               <div className="relative">
                 <select
                   value={createForm.courtId}
-                  onChange={(e) => setCreateForm({ ...createForm, courtId: e.target.value })}
+                  onChange={(event) => setCreateForm({ ...createForm, courtId: event.target.value, time: "" })}
                   disabled={!createForm.centerId}
                   className={cn(inputCls, "appearance-none pr-10 disabled:opacity-50")}
                 >
                   <option value="">{t.playTogether.selectCourt}</option>
-                  {courtsForCreate.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                  {courtsForCreate.map((court) => (
+                    <option key={court.id} value={court.id}>
+                      {court.name}
+                    </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               </div>
 
-              {/* Date */}
               <input
                 type="date"
                 value={createForm.date}
-                onChange={(e) => setCreateForm({ ...createForm, date: e.target.value })}
+                onChange={(event) => setCreateForm({ ...createForm, date: event.target.value })}
                 className={inputCls}
               />
 
-              {/* Time */}
               <div className="relative">
                 <select
                   value={createForm.time}
-                  onChange={(e) => setCreateForm({ ...createForm, time: e.target.value })}
+                  onChange={(event) => setCreateForm({ ...createForm, time: event.target.value })}
                   disabled={!createForm.date || !createForm.courtId}
                   className={cn(inputCls, "appearance-none pr-10 disabled:opacity-50")}
                 >
                   <option value="">{t.booking.selectTime || "Select time"}</option>
-                  {createForm.date && createForm.courtId && createForm.sportId ? (
-                    getAvailableTimesWithMinDuration(
-                      createForm.date,
-                      createForm.centerId,
-                      createForm.sportId,
-                      1,
-                      bookings
-                    ).map((time) => (
-                      <option key={time} value={time}>
-                        {time}
-                      </option>
-                    ))
-                  ) : null}
+                  {availableTimes.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               </div>
 
-              {/* Duration */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium">{t.booking.timeBlock}</label>
                 <div className="flex gap-2">
-                  {(() => {
-                    if (!createForm.time || !createForm.courtId || !createForm.date || !createForm.centerId) {
-                      return null;
-                    }
-
-                    // Calculate available durations
-                    const availableDurations = [1, 2, 3, 4].filter((duration) =>
-                      isDurationAvailable(
-                        createForm.date,
-                        createForm.time,
-                        duration,
-                        createForm.centerId,
-                        createForm.courtId,
-                        bookings
-                      )
-                    );
-
-                    // If no full hour available, show only 1h
-                    if (availableDurations.length === 0) {
-                      return (
-                        <button
-                          onClick={() => setCreateForm({ ...createForm, duration: 1 })}
-                          className={cn(
-                            "rounded-lg px-4 py-2 text-sm font-medium transition-all active:scale-95",
-                            "bg-primary text-primary-foreground"
-                          )}
-                        >
-                          1h
-                        </button>
-                      );
-                    }
-
-                    return availableDurations.map((h) => (
+                  {[1, 2, 3, 4]
+                    .filter(
+                      (duration) =>
+                        !createForm.time ||
+                        !createForm.courtId ||
+                        !createForm.date ||
+                        !createForm.centerId ||
+                        isDurationAvailable(
+                          createForm.date,
+                          createForm.time,
+                          duration,
+                          createForm.centerId,
+                          createForm.courtId,
+                          bookings,
+                        ),
+                    )
+                    .map((hours) => (
                       <button
-                        key={h}
-                        onClick={() => setCreateForm({ ...createForm, duration: h })}
+                        key={hours}
+                        onClick={() => setCreateForm({ ...createForm, duration: hours })}
                         className={cn(
                           "rounded-lg px-4 py-2 text-sm font-medium transition-all active:scale-95",
-                          createForm.duration === h
+                          createForm.duration === hours
                             ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-foreground hover:bg-secondary/80"
+                            : "bg-secondary text-foreground hover:bg-secondary/80",
                         )}
                       >
-                        {h}h
+                        {hours}h
                       </button>
-                    ));
-                  })()}
+                    ))}
                 </div>
               </div>
 
-              {/* Level */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium">{t.playTogether.level}</label>
                 <div className="flex gap-2">
-                  {(["beginner", "intermediate", "professional"] as SkillLevel[]).map((lv) => (
+                  {(["beginner", "intermediate", "professional"] as SkillLevel[]).map((level) => (
                     <button
-                      key={lv}
-                      onClick={() => setCreateForm({ ...createForm, level: lv })}
+                      key={level}
+                      onClick={() => setCreateForm({ ...createForm, level })}
                       className={cn(
                         "rounded-lg px-3 py-2 text-sm font-medium transition-all active:scale-95",
-                        createForm.level === lv
+                        createForm.level === level
                           ? "bg-sport-dark text-white"
-                          : "bg-secondary text-foreground hover:bg-secondary/80"
+                          : "bg-secondary text-foreground hover:bg-secondary/80",
                       )}
                     >
-                      {levelLabels[lv][lang]}
+                      {levelLabels[level][lang]}
                     </button>
                   ))}
                 </div>
@@ -415,268 +355,198 @@ export default function PlayTogetherPage() {
                 max={26}
                 placeholder={t.playTogether.minPlayersPlaceholder}
                 value={createForm.minPlayers}
-                onChange={(e) => {
-                  let val = e.target.value === "" ? "" : Number(e.target.value);
-                  if (typeof val === "number" && val < 2) val = 2;
-                  if (typeof val === "number" && val > 26) val = 26;
-                  setCreateForm({ ...createForm, minPlayers: val });
-                }}
+                onChange={(event) => setCreateForm({ ...createForm, minPlayers: event.target.value })}
                 className={inputCls}
               />
+
               <input
                 type="number"
                 max={30}
                 placeholder={t.playTogether.maxPlayersPlaceholder}
                 value={createForm.maxPlayers}
-                onChange={(e) => {
-                  let val = e.target.value === "" ? "" : Number(e.target.value);
-                  if (typeof val === "number" && val > 30) val = 30;
-                  setCreateForm({ ...createForm, maxPlayers: val });
-                }}
+                onChange={(event) => setCreateForm({ ...createForm, maxPlayers: event.target.value })}
                 className={inputCls}
               />
 
-              {/* Equipment */}
               {selectedSportForCreate && selectedSportForCreate.equipmentOptions.length > 0 && (
                 <div className="md:col-span-2">
                   <label className="mb-1.5 block text-sm font-medium">{t.booking.equipment}</label>
                   <div className="flex flex-wrap gap-2">
-                    {selectedSportForCreate.equipmentOptions.map((eq) => (
+                    {selectedSportForCreate.equipmentOptions.map((equipmentId) => (
                       <button
-                        key={eq}
-                        onClick={() => {
-                          const eqs = createForm.equipment.includes(eq)
-                            ? createForm.equipment.filter((e) => e !== eq)
-                            : [...createForm.equipment, eq];
-                          setCreateForm({ ...createForm, equipment: eqs });
-                        }}
+                        key={equipmentId}
+                        onClick={() =>
+                          setCreateForm({
+                            ...createForm,
+                            equipment: createForm.equipment.includes(equipmentId)
+                              ? createForm.equipment.filter((item) => item !== equipmentId)
+                              : [...createForm.equipment, equipmentId],
+                          })
+                        }
                         className={cn(
                           "rounded-lg px-3 py-1.5 text-sm font-medium transition-all active:scale-95",
-                          createForm.equipment.includes(eq)
+                          createForm.equipment.includes(equipmentId)
                             ? "bg-primary text-primary-foreground"
-                            : "bg-secondary hover:bg-secondary/80"
+                            : "bg-secondary hover:bg-secondary/80",
                         )}
                       >
-                        {t.equipmentNames[eq as keyof typeof t.equipmentNames]}
+                        {t.equipmentNames[equipmentId as keyof typeof t.equipmentNames]}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Description */}
               <div className="md:col-span-2">
                 <textarea
                   placeholder={t.playTogether.description}
                   value={createForm.description}
-                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value.slice(0, 1000) })}
+                  onChange={(event) => setCreateForm({ ...createForm, description: event.target.value.slice(0, 1000) })}
                   maxLength={1000}
                   rows={3}
                   className={cn(inputCls, "resize-none w-full break-words whitespace-pre-wrap overflow-hidden")}
                 />
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {createForm.description.length}/1000
-                </div>
+                <div className="mt-1 text-xs text-muted-foreground">{createForm.description.length}/1000</div>
               </div>
             </div>
 
             <button
-              onClick={handleCreateGame}
-              disabled={
-                !createForm.sportId || !createForm.centerId || !createForm.courtId || 
-                !createForm.date || !createForm.time || !createForm.creatorName || !createForm.description ||
-                (createForm.minPlayers !== "" && Number(createForm.minPlayers) < 2) ||
-                (createForm.maxPlayers !== "" && Number(createForm.maxPlayers) > 30) ||
-                (createForm.maxPlayers !== "" && createForm.minPlayers !== "" && Number(createForm.maxPlayers) < Number(createForm.minPlayers))
-              }
-              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => void handleCreateGame()}
+              disabled={createGameMutation.isPending}
+              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {t.playTogether.publish}
+              {createGameMutation.isPending ? "Publishing..." : t.playTogether.publish}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         )}
 
-        {/* Open Games List */}
         <div className="mt-10 flex flex-col gap-4">
           <h2 className="font-display text-xl font-semibold">{t.playTogether.openGames}</h2>
-          {games.map((game, idx) => {
-            const sport = sports.find((s) => s.id === game.sportId);
-            const center = sportCenters.find((c) => c.id === game.centerId);
-            const court = center?.courts.find((c) => c.id === game.courtId);
+          {games.map((game, index) => {
+            const sport = sports.find((item) => item.id === game.sportId);
+            const center = sportCenters.find((item) => item.id === game.centerId);
+            const court = center?.courts.find((item) => item.id === game.courtId);
             const isFull = game.registeredPlayers.length >= game.maxPlayers;
+            const myRegistrationName = myRegistrations[game.id];
+            const myWaitlistName = myWaitingListEntries[game.id];
 
             return (
-              <div
-                key={game.id}
-                className={cn("sport-card fade-in-up", `stagger-${Math.min(idx + 1, 5)}`)}
-              >
+              <div key={game.id} className={cn("sport-card fade-in-up", `stagger-${Math.min(index + 1, 5)}`)}>
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex-1">
-                    {/* Sport + Level */}
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-2xl">{sport?.icon}</span>
                       <h3 className="font-display text-lg font-semibold">
-                        {t.sportNames[game.sportId as keyof typeof t.sportNames]}
+                        {sport ? t.sportNames[sport.key as keyof typeof t.sportNames] : game.sportId}
                       </h3>
                       <span className={cn("rounded-lg px-2.5 py-0.5 text-xs font-semibold", levelColors[game.level])}>
                         {levelLabels[game.level][lang]}
                       </span>
                     </div>
 
-                    {/* Info */}
                     <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2.5 text-sm text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {game.date}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" />
-                        {game.time} ({game.duration}h)
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {center?.name} · {court?.name}
-                      </span>
-                      
-                      {/* Player Registration Progress - Inline */}
+                      <span className="inline-flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />{game.date}</span>
+                      <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{game.time} ({game.duration}h)</span>
+                      <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{center?.name} · {court?.name}</span>
                       <div className="w-full max-w-xs">
                         <div className="flex items-center gap-2">
                           <Users className="h-3.5 w-3.5 shrink-0" />
                           <span className="text-xs font-medium text-foreground">{game.registeredPlayers.length}/{game.maxPlayers}</span>
-                          <div 
-                            className="relative flex-1 h-1.5 bg-secondary rounded-full overflow-visible group"
+                          <div
+                            className="group relative h-1.5 flex-1 overflow-visible rounded-full bg-secondary"
                             onMouseEnter={() => setHoveredProgressBar(game.id)}
                             onMouseLeave={() => setHoveredProgressBar(null)}
                           >
-                            <div 
-                              className="h-full bg-primary transition-all"
-                              style={{ width: `${(game.registeredPlayers.length / game.maxPlayers) * 100}%` }}
-                            />
-                            {/* Minimum threshold marker */}
-                            <div 
-                              className="absolute top-0 h-full w-0.5 bg-amber-500/60 hover:bg-amber-500/100 transition-colors cursor-help"
-                              style={{ left: `${(game.minPlayers / game.maxPlayers) * 100}%` }}
-                            />
-                            
-                            {/* Hover tooltip */}
+                            <div className="h-full bg-primary transition-all" style={{ width: `${(game.registeredPlayers.length / game.maxPlayers) * 100}%` }} />
+                            <div className="absolute top-0 h-full w-0.5 bg-amber-500/60" style={{ left: `${(game.minPlayers / game.maxPlayers) * 100}%` }} />
                             {hoveredProgressBar === game.id && (
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-foreground text-background text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+                              <div className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 rounded bg-foreground px-2 py-1 text-xs whitespace-nowrap text-background">
                                 Minimum: {game.minPlayers} players
                               </div>
                             )}
                           </div>
-                          {/* Waitlist count badge for full games */}
-                          {isFull && waitingList[game.id]?.length > 0 && (
+                          {isFull && game.waitingList.length > 0 && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">
-                              ⏳ {waitingList[game.id].length} {t.playTogether.waiting}
+                              ⏳ {game.waitingList.length} {t.playTogether.waiting}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    <p className="mt-3 text-sm text-pretty w-full break-words whitespace-pre-wrap max-w-full overflow-hidden">{game.description}</p>
+                    <p className="mt-3 max-w-full w-full break-words whitespace-pre-wrap text-sm text-pretty overflow-hidden">
+                      {game.description}
+                    </p>
 
-                    {/* Equipment */}
-                    {game.equipment && game.equipment.length > 0 && (
+                    {game.equipment.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
-                        {game.equipment.map((eq) => (
-                          <span key={eq} className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-                            {t.equipmentNames[eq as keyof typeof t.equipmentNames] || eq}
+                        {game.equipment.map((equipmentId) => (
+                          <span key={equipmentId} className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                            {t.equipmentNames[equipmentId as keyof typeof t.equipmentNames] || equipmentId}
                           </span>
                         ))}
                       </div>
                     )}
-
-                    {/* Registered */}
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {myRegistrations[game.id] === game.creatorName ? (
-                        // User is the organizer - show all names
-                        game.registeredPlayers.map((p, i) => (
-                          <span
-                            key={i}
-                            className="inline-flex h-7 items-center rounded-full bg-sport-yellow-light px-2.5 text-xs font-medium"
-                          >
-                            {p.name}
-                          </span>
-                        ))
-                      ) : (
-                        // User is not the organizer - show organizer + count
-                        <>
-                          <span className="inline-flex h-7 items-center rounded-full bg-sport-yellow-light px-2.5 text-xs font-medium">
-                            {game.creatorName}
-                          </span>
-                          {game.registeredPlayers.length > 1 && (
-                            <span className="inline-flex h-7 items-center rounded-full bg-sport-yellow-light px-2.5 text-xs font-medium">
-                              +{game.registeredPlayers.length - 1}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </div>
                   </div>
 
-                  {/* Register button */}
                   <div className="flex shrink-0 flex-col items-end gap-2">
-                    {myRegistrations[game.id] ? (
-                      // Show cancel button if user is registered (always, regardless of full status)
+                    {myRegistrationName ? (
                       <button
                         onClick={() => {
-                          const canCancel = !isWithin24Hours(game.date, game.time);
-                          if (canCancel) {
-                            handleCancelRegistration(game.id);
+                          if (!isWithin24Hours(game.date, game.time)) {
+                            void cancelRegistrationMutation.mutateAsync({ gameId: game.id, name: myRegistrationName });
+                            const next = { ...myRegistrations };
+                            delete next[game.id];
+                            setMyRegistrations(next);
                           }
                         }}
                         disabled={isWithin24Hours(game.date, game.time)}
-                        title={isWithin24Hours(game.date, game.time) ? "Cannot cancel within 24 hours of game" : "Cancel your registration"}
                         className={cn(
                           "rounded-2xl px-5 py-2.5 text-sm font-display font-semibold transition-all active:scale-[0.97]",
                           isWithin24Hours(game.date, game.time)
-                            ? "bg-secondary text-muted-foreground cursor-not-allowed opacity-60"
-                            : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                            ? "cursor-not-allowed bg-secondary text-muted-foreground opacity-60"
+                            : "bg-destructive/20 text-destructive hover:bg-destructive/30",
                         )}
                       >
                         {t.playTogether.cancel}
                       </button>
                     ) : isFull ? (
-                      myWaitingListEntries[game.id] ? (
-                        // Show cancel waitinglist button if user is on waitinglist
+                      myWaitlistName ? (
                         <button
                           onClick={() => {
                             if (!isWithin24Hours(game.date, game.time)) {
-                              handleWaitingListCancel(game.id, myWaitingListEntries[game.id]);
+                              void cancelWaitlistMutation.mutateAsync({ gameId: game.id, name: myWaitlistName });
+                              const next = { ...myWaitingListEntries };
+                              delete next[game.id];
+                              setMyWaitingListEntries(next);
                             }
                           }}
                           disabled={isWithin24Hours(game.date, game.time)}
-                          title={isWithin24Hours(game.date, game.time) ? "Cannot cancel waitlist within 24 hours of game" : "Cancel your waitlist entry"}
                           className={cn(
                             "rounded-2xl px-5 py-2.5 text-sm font-display font-semibold transition-all active:scale-[0.97]",
                             isWithin24Hours(game.date, game.time)
-                              ? "bg-secondary text-muted-foreground cursor-not-allowed opacity-60"
-                              : "bg-destructive/20 text-destructive hover:bg-destructive/30"
+                              ? "cursor-not-allowed bg-secondary text-muted-foreground opacity-60"
+                              : "bg-destructive/20 text-destructive hover:bg-destructive/30",
                           )}
                         >
                           {t.playTogether.cancelWaitlist}
                         </button>
                       ) : (
-                        // Show register to waitinglist button if user is not on waitinglist and not registered
                         <button
                           onClick={() => setRegisterGameId(registerGameId === game.id ? null : game.id)}
                           disabled={isWithin24Hours(game.date, game.time)}
-                          title={isWithin24Hours(game.date, game.time) ? "Cannot join waitlist within 24 hours of game" : "Join the waitlist"}
                           className={cn(
                             "rounded-2xl border-2 px-5 py-2.5 text-sm font-display font-semibold transition-all active:scale-[0.97]",
                             isWithin24Hours(game.date, game.time)
                               ? "border-muted-foreground text-muted-foreground cursor-not-allowed opacity-60"
-                              : "border-primary text-primary hover:bg-primary/10"
+                              : "border-primary text-primary hover:bg-primary/10",
                           )}
                         >
                           {t.playTogether.joinWaitlist}
                         </button>
                       )
                     ) : (
-                      // Show join button if user is not registered and game is not full
                       <button
                         onClick={() => setRegisterGameId(registerGameId === game.id ? null : game.id)}
                         className="rounded-2xl bg-primary px-5 py-2.5 text-sm font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97]"
@@ -687,8 +557,7 @@ export default function PlayTogetherPage() {
                   </div>
                 </div>
 
-                {/* Register form inline */}
-                {registerGameId === game.id && !myRegistrations[game.id] && (
+                {registerGameId === game.id && !myRegistrationName && (
                   <div className="mt-4 border-t border-border pt-4 fade-in-up">
                     <h4 className="mb-3 font-display text-sm font-semibold">
                       {isFull ? t.playTogether.registerWaitlist : t.playTogether.registerTitle}
@@ -697,36 +566,27 @@ export default function PlayTogetherPage() {
                       <input
                         placeholder={t.playTogether.namePlaceholder}
                         value={registerForm.name}
-                        onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
+                        onChange={(event) => setRegisterForm({ ...registerForm, name: event.target.value })}
                         className={inputCls}
                       />
                       <input
                         type="email"
                         placeholder={t.booking.email}
                         value={registerForm.email}
-                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                        onChange={(event) => setRegisterForm({ ...registerForm, email: event.target.value })}
                         className={inputCls}
                       />
                       <input
                         placeholder={t.booking.phone}
                         value={registerForm.phone}
-                        onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
+                        onChange={(event) => setRegisterForm({ ...registerForm, phone: event.target.value })}
                         className={inputCls}
                       />
                     </div>
                     <button
-                      onClick={() => {
-                        if (isFull) {
-                          handleWaitingListRegister(game.id, registerForm.name);
-                          setRegisterGameId(null);
-                          setRegisterForm({ name: "", email: "", phone: "" });
-                        } else {
-                          handleRegister(game.id);
-                        }
-                      }}
-                      disabled={!registerForm.name || !registerForm.email || !registerForm.phone || (isFull && isWithin24Hours(game.date, game.time))}
-                      title={isFull && isWithin24Hours(game.date, game.time) ? "Cannot join waitlist within 24 hours of game" : ""}
-                      className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-sport-dark px-5 py-2.5 text-sm font-display font-semibold text-white transition-all hover:bg-sport-dark/90 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => void handleRegister(game.id, isFull)}
+                      disabled={!registerForm.name || !registerForm.email || !registerForm.phone || registerMutation.isPending}
+                      className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-sport-dark px-5 py-2.5 text-sm font-display font-semibold text-white transition-all hover:bg-sport-dark/90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {isFull ? t.playTogether.confirmWaitlist : t.playTogether.confirmJoin}
                       <ArrowRight className="h-4 w-4" />

@@ -23,7 +23,9 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     allowedHosts: ["kjsk.kurkai.ee"],
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), mode === "development" && componentTagger()].filter(
+    Boolean,
+  ),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

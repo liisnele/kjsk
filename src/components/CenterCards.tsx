@@ -49,7 +49,7 @@ export default function CenterCards() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {center.description[lang]}
+                  {center.description[lang === "ru" ? "en" : lang]}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {center.sportIds.slice(0, 4).map((sportId) => (

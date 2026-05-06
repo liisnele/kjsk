@@ -1,7 +1,7 @@
 ﻿import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { et } from "date-fns/locale";
+import { enUS, et, ru } from "date-fns/locale";
 import { ArrowLeft, ArrowRight, Check, MapPin, Star } from "lucide-react";
 import Header from "@/components/Header";
 import { Calendar } from "@/components/ui/calendar";
@@ -100,6 +100,19 @@ export default function BookingPage() {
     () => (sportPrices[selectedSport] || 0) * selectedDuration + equipmentTotal,
     [equipmentTotal, selectedDuration, selectedSport, sportPrices],
   );
+  const calendarLocale = lang === "ru" ? ru : lang === "en" ? enUS : et;
+  const centerDescriptionLang = lang === "ru" ? "en" : lang;
+  const courtCountLabel = (count: number) => {
+    if (lang === "et") {
+      return count === 1 ? "väljak" : "väljakut";
+    }
+
+    if (lang === "ru") {
+      return count === 1 ? "площадка" : count > 1 && count < 5 ? "площадки" : "площадок";
+    }
+
+    return count === 1 ? "court" : "courts";
+  };
 
   const canProceed = () => {
     switch (step) {
@@ -223,7 +236,7 @@ export default function BookingPage() {
                         {center.location}
                       </div>
                       <p className="mt-2 text-sm text-muted-foreground">
-                        {center.description[lang]}
+                        {center.description[centerDescriptionLang]}
                       </p>
                       <div className="mt-3 flex items-center gap-1 text-sm font-medium">
                         <Star className="h-3.5 w-3.5 fill-primary text-primary" />
@@ -271,13 +284,7 @@ export default function BookingPage() {
                         </span>
                         <span className="text-xs text-muted-foreground">
                           €{sport.hourlyPrice}/h · {courtsCount}{" "}
-                          {lang === "et"
-                            ? courtsCount === 1
-                              ? "väljak"
-                              : "väljakut"
-                            : courtsCount === 1
-                              ? "court"
-                              : "courts"}
+                          {courtCountLabel(courtsCount)}
                         </span>
                       </button>
                     );
@@ -296,7 +303,7 @@ export default function BookingPage() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
-                  locale={et}
+                  locale={calendarLocale}
                   className="pointer-events-auto rounded-2xl border border-border bg-card p-4"
                   disabled={{
                     before: new Date(
@@ -597,4 +604,5 @@ export default function BookingPage() {
     </div>
   );
 }
+
 

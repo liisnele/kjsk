@@ -5,10 +5,10 @@ import { generateTimeSlots } from "@/lib/availability";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { et } from "date-fns/locale";
+import { enUS, et, ru } from "date-fns/locale";
 
 export default function BookingCalendar() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedCenter, setSelectedCenter] = useState<string>("all");
   const { data: catalog, isLoading: catalogLoading } = useCatalogQuery();
@@ -17,6 +17,7 @@ export default function BookingCalendar() {
   const sportCenters = catalog?.sportCenters ?? [];
   const sports = catalog?.sports ?? [];
   const dateStr = format(selectedDate, "yyyy-MM-dd");
+  const calendarLocale = lang === "ru" ? ru : lang === "en" ? enUS : et;
 
   const centersToShow =
     selectedCenter === "all"
@@ -65,7 +66,7 @@ export default function BookingCalendar() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
-                  locale={et}
+                  locale={calendarLocale}
                   className="pointer-events-auto"
                   disabled={{
                     before: new Date(

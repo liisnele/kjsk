@@ -5,6 +5,7 @@ import { Globe } from "lucide-react";
 export default function Header() {
   const { lang, setLang, t } = useLang();
   const location = useLocation();
+  const nextLang = lang === "et" ? "en" : lang === "en" ? "ru" : "et";
 
   const linkClass = (path: string) =>
     `text-sm font-medium transition-colors hover:text-foreground ${
@@ -61,11 +62,11 @@ export default function Header() {
         </nav>
 
         <button
-          onClick={() => setLang(lang === "et" ? "en" : "et")}
+          onClick={() => setLang(nextLang)}
           className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-all hover:bg-secondary active:scale-95"
         >
           <Globe className="h-4 w-4" />
-          {lang === "et" ? "EN" : "ET"}
+          {nextLang.toUpperCase()}
         </button>
       </div>
     </header>

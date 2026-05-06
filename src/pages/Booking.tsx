@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { et } from "date-fns/locale";
@@ -13,8 +13,6 @@ import {
 } from "@/hooks/use-api-data";
 import { generateTimeSlots } from "@/lib/availability";
 import { cn } from "@/lib/utils";
-
-type StartMode = "sport" | "center" | null;
 
 export default function BookingPage() {
   const { lang, t } = useLang();
@@ -31,14 +29,8 @@ export default function BookingPage() {
 
   const initialSport = searchParams.get("sport") || "";
   const initialCenter = searchParams.get("center") || "";
-  const initialMode: StartMode = initialSport
-    ? "sport"
-    : initialCenter
-      ? "center"
-      : null;
-  const initialStep = initialSport || initialCenter ? 2 : 1;
+  const initialStep = initialCenter && initialSport ? 3 : initialCenter ? 2 : 1;
 
-  const [startMode, setStartMode] = useState<StartMode>(initialMode);
   const [step, setStep] = useState(initialStep);
   const [selectedSport, setSelectedSport] = useState(initialSport);
   const [selectedCenter, setSelectedCenter] = useState(initialCenter);
@@ -62,7 +54,6 @@ export default function BookingPage() {
     t.booking.step2,
     t.booking.step3,
     t.booking.step4,
-    t.booking.step5,
   ];
 
   const availableCenters = useMemo(() => {
@@ -113,9 +104,9 @@ export default function BookingPage() {
   const canProceed = () => {
     switch (step) {
       case 1:
-        return true;
+        return !!selectedCenter;
       case 2:
-        return startMode === "sport" ? !!selectedCenter : !!selectedSport;
+        return !!selectedSport;
       case 3:
         return !!selectedTime && !!effectiveCourtId;
       case 4:
@@ -126,28 +117,6 @@ export default function BookingPage() {
   };
 
   const goNext = () => {
-    if (step === 1) {
-      if (!startMode) {
-        setStartMode("sport");
-        if (!selectedSport && sports.length > 0) {
-          setSelectedSport(sports[0].id);
-        }
-        setStep(2);
-        return;
-      }
-
-      if (startMode === "sport" && !selectedSport && sports.length > 0) {
-        setSelectedSport(sports[0].id);
-      }
-
-      if (startMode === "center" && !selectedCenter && sportCenters.length > 0) {
-        setSelectedCenter(sportCenters[0].id);
-      }
-
-      setStep(2);
-      return;
-    }
-
     if (canProceed()) {
       setStep(step + 1);
     }
@@ -224,36 +193,72 @@ export default function BookingPage() {
         <div className="mt-10">
           {step === 1 && (
             <div>
-              {!startMode && (
-                <div className="mx-auto flex max-w-md flex-col items-center gap-4 text-center">
-                  <p className="text-lg font-medium">{t.booking.selectSport}</p>
-                  <div className="flex gap-4">
+              <h2 className="mb-6 font-display text-xl font-semibold">
+                {t.booking.selectCenter}
+              </h2>
+              {availableCenters.length === 0 ? (
+                <p className="text-muted-foreground">{t.booking.noResults}</p>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {availableCenters.map((center) => (
                     <button
-                      onClick={() => setStartMode("sport")}
-                      className="rounded-2xl bg-primary px-6 py-3 font-display font-semibold text-primary-foreground transition-all hover:brightness-105 active:scale-[0.97]"
+                      key={center.id}
+                      onClick={() => {
+                        setSelectedCenter(center.id);
+                        if (selectedSport && !center.sportIds.includes(selectedSport)) {
+                          setSelectedSport("");
+                        }
+                        setSelectedCourt("");
+                        setSelectedTime("");
+                      }}
+                      className={cn(
+                        "sport-card text-left",
+                        selectedCenter === center.id &&
+                          "ring-2 ring-primary bg-sport-yellow-light",
+                      )}
                     >
-                      {t.booking.startWithSport}
+                      <h3 className="font-display font-semibold">{center.name}</h3>
+                      <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {center.location}
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {center.description[lang]}
+                      </p>
+                      <div className="mt-3 flex items-center gap-1 text-sm font-medium">
+                        <Star className="h-3.5 w-3.5 fill-primary text-primary" />
+                        {center.rating}
+                      </div>
                     </button>
-                    <button
-                      onClick={() => setStartMode("center")}
-                      className="rounded-2xl border-2 border-border px-6 py-3 font-display font-semibold transition-all hover:bg-secondary active:scale-[0.97]"
-                    >
-                      {t.booking.startWithCenter}
-                    </button>
-                  </div>
+                  ))}
                 </div>
               )}
+            </div>
+          )}
 
-              {startMode === "sport" && (
-                <div>
-                  <h2 className="mb-6 font-display text-xl font-semibold">
-                    {t.booking.selectSport}
-                  </h2>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-                    {sports.map((sport) => (
+          {step === 2 && (
+            <div>
+              <h2 className="mb-6 font-display text-xl font-semibold">
+                {t.booking.selectSport}
+              </h2>
+              {availableSports.length === 0 ? (
+                <p className="text-muted-foreground">{t.booking.noResults}</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                  {availableSports.map((sport) => {
+                    const courtsCount =
+                      selectedCenterData?.courts.filter(
+                        (court) => court.sportId === sport.id,
+                      ).length || 0;
+
+                    return (
                       <button
                         key={sport.id}
-                        onClick={() => setSelectedSport(sport.id)}
+                        onClick={() => {
+                          setSelectedSport(sport.id);
+                          setSelectedCourt("");
+                          setSelectedTime("");
+                        }}
                         className={cn(
                           "sport-card flex flex-col items-center gap-2 py-5",
                           selectedSport === sport.id &&
@@ -265,105 +270,15 @@ export default function BookingPage() {
                           {t.sportNames[sport.key as keyof typeof t.sportNames]}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          €{sport.hourlyPrice}/h
+                          €{sport.hourlyPrice}/h · {courtsCount}{" "}
+                          {lang === "et"
+                            ? courtsCount === 1
+                              ? "väljak"
+                              : "väljakut"
+                            : courtsCount === 1
+                              ? "court"
+                              : "courts"}
                         </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {startMode === "center" && (
-                <div>
-                  <h2 className="mb-6 font-display text-xl font-semibold">
-                    {t.booking.selectCenter}
-                  </h2>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {sportCenters.map((center) => (
-                      <button
-                        key={center.id}
-                        onClick={() => setSelectedCenter(center.id)}
-                        className={cn(
-                          "sport-card text-left",
-                          selectedCenter === center.id &&
-                            "ring-2 ring-primary bg-sport-yellow-light",
-                        )}
-                      >
-                        <h3 className="font-display font-semibold">{center.name}</h3>
-                        <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {center.location}
-                        </div>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          {center.description[lang]}
-                        </p>
-                        <div className="mt-3 flex items-center gap-1 text-sm font-medium">
-                          <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                          {center.rating}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {step === 2 && startMode === "sport" && (
-            <div>
-              <h2 className="mb-6 font-display text-xl font-semibold">
-                {t.booking.selectCenter}
-              </h2>
-              {availableCenters.length === 0 ? (
-                <p className="text-muted-foreground">{t.booking.noResults}</p>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {availableCenters.map((center) => {
-                    const courtsCount = center.courts.filter(
-                      (court) => court.sportId === selectedSport,
-                    ).length;
-
-                    return (
-                      <button
-                        key={center.id}
-                        onClick={() => setSelectedCenter(center.id)}
-                        className={cn(
-                          "sport-card text-left",
-                          selectedCenter === center.id &&
-                            "ring-2 ring-primary bg-sport-yellow-light",
-                        )}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-display font-semibold">{center.name}</h3>
-                            <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {center.location}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 text-sm font-medium">
-                            <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                            {center.rating}
-                          </div>
-                        </div>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          {center.description[lang]}
-                        </p>
-                        <div className="mt-3 flex items-center gap-3 text-sm">
-                          <span className="font-medium">
-                            €{sportPrices[selectedSport] || 0}/h
-                          </span>
-                          <span className="text-muted-foreground">
-                            {courtsCount}{" "}
-                            {lang === "et"
-                              ? courtsCount === 1
-                                ? "väljak"
-                                : "väljakut"
-                              : courtsCount === 1
-                                ? "court"
-                                : "courts"}
-                          </span>
-                        </div>
                       </button>
                     );
                   })}
@@ -371,50 +286,6 @@ export default function BookingPage() {
               )}
             </div>
           )}
-
-          {step === 2 && startMode === "center" && (
-            <div>
-              <h2 className="mb-6 font-display text-xl font-semibold">
-                {t.booking.selectSport}
-              </h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-                {availableSports.map((sport) => {
-                  const courtsCount =
-                    selectedCenterData?.courts.filter(
-                      (court) => court.sportId === sport.id,
-                    ).length || 0;
-
-                  return (
-                    <button
-                      key={sport.id}
-                      onClick={() => setSelectedSport(sport.id)}
-                      className={cn(
-                        "sport-card flex flex-col items-center gap-2 py-5",
-                        selectedSport === sport.id &&
-                          "ring-2 ring-primary bg-sport-yellow-light",
-                      )}
-                    >
-                      <span className="text-2xl">{sport.icon}</span>
-                      <span className="text-sm font-medium">
-                        {t.sportNames[sport.key as keyof typeof t.sportNames]}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        €{sport.hourlyPrice}/h · {courtsCount}{" "}
-                        {lang === "et"
-                          ? courtsCount === 1
-                            ? "väljak"
-                            : "väljakut"
-                          : courtsCount === 1
-                            ? "court"
-                            : "courts"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {step === 3 && (
             <div className="flex flex-col gap-8 lg:flex-row">
               <div>
@@ -582,7 +453,7 @@ export default function BookingPage() {
                               : "bg-secondary hover:bg-secondary/80",
                           )}
                         >
-                          {t.equipmentNames[equipmentId as keyof typeof t.equipmentNames]} · €
+                          {t.equipmentNames[equipmentId as keyof typeof t.equipmentNames]} Ā· ā‚¬
                           {equipmentPrices[equipmentId] || 0}
                         </button>
                       ))}
@@ -615,16 +486,16 @@ export default function BookingPage() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.step1}</span>
+                    <span className="font-medium">{selectedCenterData?.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t.booking.step2}</span>
                     <span className="font-medium">
                       {selectedSportData?.icon}{" "}
                       {selectedSportData
                         ? t.sportNames[selectedSportData.key as keyof typeof t.sportNames]
                         : ""}
                     </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t.booking.step2}</span>
-                    <span className="font-medium">{selectedCenterData?.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.step3}</span>
@@ -644,18 +515,18 @@ export default function BookingPage() {
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t.booking.courtRental}:</span>
-                        <span>€{(sportPrices[selectedSport] || 0) * selectedDuration}</span>
+                        <span>ā‚¬{(sportPrices[selectedSport] || 0) * selectedDuration}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t.booking.equipmentCost}:</span>
-                        <span>€{equipmentTotal}</span>
+                        <span>ā‚¬{equipmentTotal}</span>
                       </div>
                       <div className="border-t border-border pt-1" />
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.price}</span>
-                    <span className="font-bold text-foreground">€{totalPrice}</span>
+                    <span className="font-bold text-foreground">ā‚¬{totalPrice}</span>
                   </div>
                 </div>
               </div>
@@ -675,27 +546,29 @@ export default function BookingPage() {
         {step >= 1 && step <= 4 && (
           <div className="mt-10 flex justify-between">
             <button
+              disabled={step === 1}
               onClick={() => {
-                if (step === 1 && startMode) {
-                  setStartMode(null);
-                  setSelectedSport("");
-                  setSelectedCenter("");
-                } else if (step > 1) {
+                if (step > 1) {
                   setStep(step - 1);
                 }
               }}
-              className="flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium transition-all hover:bg-secondary active:scale-95"
+              className={cn(
+                "flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium transition-all active:scale-95",
+                step === 1
+                  ? "cursor-not-allowed opacity-40"
+                  : "hover:bg-secondary",
+              )}
             >
               <ArrowLeft className="h-4 w-4" />
               {t.booking.back}
             </button>
             {step < 4 ? (
               <button
-                disabled={step > 1 && !canProceed()}
+                disabled={!canProceed()}
                 onClick={goNext}
                 className={cn(
                   "flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all active:scale-95",
-                  step === 1 || canProceed()
+                  canProceed()
                     ? "bg-primary text-primary-foreground hover:brightness-105"
                     : "cursor-not-allowed bg-secondary text-muted-foreground",
                 )}
@@ -724,3 +597,4 @@ export default function BookingPage() {
     </div>
   );
 }
+

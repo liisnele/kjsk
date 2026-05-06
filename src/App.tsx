@@ -6,7 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import BookingPage from "./pages/Booking";
-import PlayTogetherPage from "./pages/PlayTogether";
+// Demo branch: Play Together is hidden for now. Restore this import with the route below to bring it back.
+// import PlayTogetherPage from "./pages/PlayTogether";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,7 +22,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/booking" element={<BookingPage />} />
-            <Route path="/play-together" element={<PlayTogetherPage />} />
+            {/* Demo branch: Play Together is hidden for now. */}
+            {/* <Route path="/play-together" element={<PlayTogetherPage />} /> */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

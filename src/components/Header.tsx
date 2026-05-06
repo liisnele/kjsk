@@ -41,20 +41,23 @@ export default function Header() {
           <Link to="/booking" className={linkClass("/booking")}>
             {t.nav.booking}
           </Link>
-          <Link to="/play-together" className={linkClass("/play-together") + " text-center"}>
-            <span className="block sm:inline whitespace-pre-line">
-              {t.nav.playTogether.split(" ").length === 2
-                ? (
-                  <>
-                    <span>{t.nav.playTogether.split(" ")[0]}</span>
-                    <span className="sm:hidden"><br /></span>
-                    <span className="hidden sm:inline"> </span>
-                    <span>{t.nav.playTogether.split(" ")[1]}</span>
-                  </>
-                )
-                : t.nav.playTogether}
+          {/* Demo branch: Play Together is hidden for now. Restore this link to bring the tab back. */}
+          {/* <Link to="/play-together" className={linkClass("/play-together") + " text-center"}>
+            <span className="block whitespace-pre-line sm:inline">
+              {t.nav.playTogether.split(" ").length === 2 ? (
+                <>
+                  <span>{t.nav.playTogether.split(" ")[0]}</span>
+                  <span className="sm:hidden">
+                    <br />
+                  </span>
+                  <span className="hidden sm:inline"> </span>
+                  <span>{t.nav.playTogether.split(" ")[1]}</span>
+                </>
+              ) : (
+                t.nav.playTogether
+              )}
             </span>
-          </Link>
+          </Link> */}
         </nav>
 
         <button

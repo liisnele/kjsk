@@ -1,11 +1,82 @@
 import { useMemo, useState } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import { useBookingsQuery, useCatalogQuery } from "@/hooks/use-api-data";
-import { generateTimeSlots } from "@/lib/availability";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { enUS, et, ru } from "date-fns/locale";
+import type { Booking, Court, SportCenter } from "@/types/api";
+
+const SLOT_MINUTES = 30;
+const FALLBACK_OPEN = 8 * 60;
+const FALLBACK_CLOSE = 22 * 60;
+
+function timeToMinutes(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function minutesToTime(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+
+  return `${hours.toString().padStart(2, "0")}:${remainder
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+function bookingEndTime(booking: Booking) {
+  return minutesToTime(timeToMinutes(booking.time) + booking.duration * 60);
+}
+
+function getConfirmedBookings(bookings: Booking[], date: string) {
+  return bookings.filter(
+    (booking) => booking.date === date && booking.status === "confirmed",
+  );
+}
+
+function getCalendarRange(
+  centers: SportCenter[],
+  confirmedBookings: Booking[],
+) {
+  const openingTimes = centers.map((center) => center.openingHours.open * 60);
+  const closingTimes = centers.map((center) => center.openingHours.close * 60);
+  const bookingStarts = confirmedBookings.map((booking) => timeToMinutes(booking.time));
+  const bookingEnds = confirmedBookings.map(
+    (booking) => timeToMinutes(booking.time) + booking.duration * 60,
+  );
+
+  return {
+    open: Math.min(FALLBACK_OPEN, ...openingTimes, ...bookingStarts),
+    close: Math.max(FALLBACK_CLOSE, ...closingTimes, ...bookingEnds),
+  };
+}
+
+function getBookingSpan(booking: Booking, rangeStart: number) {
+  const start = timeToMinutes(booking.time);
+  const end = start + booking.duration * 60;
+
+  return {
+    columnStart: Math.floor((start - rangeStart) / SLOT_MINUTES) + 1,
+    span: Math.max(1, Math.ceil((end - start) / SLOT_MINUTES)),
+  };
+}
+
+function getCourtBookings(
+  bookings: Booking[],
+  center: SportCenter,
+  court: Court,
+) {
+  return bookings.filter(
+    (booking) =>
+      booking.centerId === center.id &&
+      (booking.courtId === court.id ||
+        (!booking.courtId &&
+          booking.sportId === court.sportId &&
+          center.courts.find((item) => item.sportId === booking.sportId)?.id ===
+            court.id)),
+  );
+}
 
 export default function BookingCalendar() {
   const { lang, t } = useLang();
@@ -14,22 +85,39 @@ export default function BookingCalendar() {
   const { data: catalog, isLoading: catalogLoading } = useCatalogQuery();
   const { data: bookings = [] } = useBookingsQuery();
 
-  const sportCenters = catalog?.sportCenters ?? [];
-  const sports = catalog?.sports ?? [];
+  const sportCenters = useMemo(
+    () => catalog?.sportCenters ?? [],
+    [catalog?.sportCenters],
+  );
+  const sports = useMemo(() => catalog?.sports ?? [], [catalog?.sports]);
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const calendarLocale = lang === "ru" ? ru : lang === "en" ? enUS : et;
 
-  const centersToShow =
-    selectedCenter === "all"
-      ? sportCenters
-      : sportCenters.filter((center) => center.id === selectedCenter);
-
-  const hours = useMemo(
+  const centersToShow = useMemo(
     () =>
-      Array.from({ length: 14 }, (_, index) =>
-        `${(8 + index).toString().padStart(2, "0")}:00`,
+      selectedCenter === "all"
+        ? sportCenters
+        : sportCenters.filter((center) => center.id === selectedCenter),
+    [selectedCenter, sportCenters],
+  );
+
+  const confirmedBookings = useMemo(
+    () => getConfirmedBookings(bookings, dateStr),
+    [bookings, dateStr],
+  );
+
+  const { open, close } = useMemo(
+    () => getCalendarRange(centersToShow, confirmedBookings),
+    [centersToShow, confirmedBookings],
+  );
+
+  const timeSlots = useMemo(
+    () =>
+      Array.from(
+        { length: Math.ceil((close - open) / SLOT_MINUTES) },
+        (_, index) => minutesToTime(open + index * SLOT_MINUTES),
       ),
-    [],
+    [close, open],
   );
 
   const firstColumnWidth = useMemo(() => {
@@ -45,6 +133,8 @@ export default function BookingCalendar() {
 
     return Math.max(140, longestCourtNameLength * 8);
   }, [sportCenters]);
+
+  const gridTemplateColumns = `${firstColumnWidth}px repeat(${timeSlots.length}, minmax(42px, 1fr))`;
 
   return (
     <section className="bg-sport-gray-light py-20 md:py-28">
@@ -108,7 +198,7 @@ export default function BookingCalendar() {
             </div>
 
             <div className="flex-1 overflow-x-auto">
-              <div className="min-w-[600px]">
+              <div className="min-w-[760px]">
                 {centersToShow.map((center) => (
                   <div key={center.id} className="mb-6">
                     <h3 className="mb-3 font-display text-base font-semibold">
@@ -117,68 +207,97 @@ export default function BookingCalendar() {
                     <div className="overflow-hidden rounded-xl border border-border bg-card">
                       <div
                         className="grid"
-                        style={{
-                          gridTemplateColumns: `${firstColumnWidth}px repeat(${hours.length}, 1fr)`,
-                        }}
+                        style={{ gridTemplateColumns }}
                       >
                         <div className="border-b border-r border-border bg-secondary/50 p-2 text-xs font-medium text-muted-foreground">
                           {t.booking.courts}
                         </div>
-                        {hours.map((hour) => (
+                        {timeSlots.map((time) => (
                           <div
-                            key={hour}
+                            key={time}
                             className="border-b border-r border-border bg-secondary/50 p-2 text-center text-xs text-muted-foreground last:border-r-0"
                           >
-                            {hour}
+                            {time.endsWith(":00") ? time : ""}
                           </div>
                         ))}
+                      </div>
 
-                        {center.courts.map((court) => {
-                          const sport = sports.find((item) => item.id === court.sportId);
-                          const slots = generateTimeSlots(
-                            dateStr,
-                            center.id,
-                            court.sportId,
-                            sportCenters,
-                            bookings,
-                          );
-                          const courtSlots = slots.filter((slot) => slot.courtId === court.id);
+                      {center.courts.map((court) => {
+                        const sport = sports.find((item) => item.id === court.sportId);
+                        const courtBookings = getCourtBookings(
+                          confirmedBookings,
+                          center,
+                          court,
+                        );
 
-                          return (
-                            <div key={court.id} className="contents">
-                              <div className="flex items-center gap-1.5 border-b border-r border-border p-2 text-xs font-medium whitespace-nowrap last:border-b-0">
-                                <span>{sport?.icon}</span>
-                                {court.name}
-                              </div>
-                              {hours.map((hour) => {
-                                const slot = courtSlots.find((item) => item.time === hour);
+                        return (
+                          <div
+                            key={court.id}
+                            className="grid"
+                            style={{ gridTemplateColumns }}
+                          >
+                            <div className="flex min-h-12 items-center gap-1.5 border-b border-r border-border p-2 text-xs font-medium whitespace-nowrap last:border-b-0">
+                              <span>{sport?.icon}</span>
+                              {court.name}
+                            </div>
+                            <div
+                              className="relative grid border-b border-border"
+                              style={{
+                                gridColumn: `2 / span ${timeSlots.length}`,
+                                gridTemplateColumns: `repeat(${timeSlots.length}, minmax(42px, 1fr))`,
+                              }}
+                            >
+                              {timeSlots.map((time) => {
+                                const slotStart = timeToMinutes(time);
+                                const slotEnd = slotStart + SLOT_MINUTES;
+                                const isBooked = courtBookings.some((booking) => {
+                                  const bookingStart = timeToMinutes(booking.time);
+                                  const bookingEnd =
+                                    bookingStart + booking.duration * 60;
+
+                                  return slotStart < bookingEnd && slotEnd > bookingStart;
+                                });
+
                                 return (
                                   <div
-                                    key={hour}
+                                    key={time}
                                     className={cn(
-                                      "border-b border-r border-border p-1 last:border-r-0 last:border-b-0",
-                                      slot?.available
-                                        ? "bg-sport-success/10"
-                                        : "bg-destructive/10",
+                                      "min-h-12 border-r border-border last:border-r-0",
+                                      isBooked
+                                        ? "bg-destructive/10"
+                                        : "bg-sport-success/10",
                                     )}
+                                  />
+                                );
+                              })}
+
+                              {courtBookings.map((booking) => {
+                                const { columnStart, span } = getBookingSpan(booking, open);
+                                const timeLabel = `${booking.time}-${bookingEndTime(booking)}`;
+
+                                return (
+                                  <div
+                                    key={booking.id}
+                                    className="z-10 m-1 overflow-hidden rounded-md bg-destructive px-2 py-1 text-[10px] font-semibold leading-tight text-destructive-foreground shadow-sm"
+                                    style={{
+                                      gridColumn: `${columnStart} / span ${span}`,
+                                      gridRow: 1,
+                                    }}
+                                    title={timeLabel}
                                   >
-                                    <div
-                                      className={cn(
-                                        "h-full w-full rounded text-center text-[10px] font-medium leading-6",
-                                        slot?.available
-                                          ? "text-sport-success"
-                                          : "text-destructive",
-                                      )}
-                                    >
-                                      ●
-                                    </div>
+                                    <span className="block truncate">
+                                      {t.calendar.booked}
+                                    </span>
+                                    <span className="block truncate font-medium opacity-90">
+                                      {timeLabel}
+                                    </span>
                                   </div>
                                 );
                               })}
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

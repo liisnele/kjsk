@@ -1,11 +1,12 @@
 import { useLang } from "@/contexts/LanguageContext";
+import type { Lang } from "@/data/translations";
 import { Link, useLocation } from "react-router-dom";
-import { Globe } from "lucide-react";
 
 export default function Header() {
   const { lang, setLang, t } = useLang();
   const location = useLocation();
-  const nextLang = lang === "et" ? "en" : lang === "en" ? "ru" : "et";
+  const languageOptions: Lang[] = ["et", "ru", "en"];
+  const availableLanguages = languageOptions.filter((option) => option !== lang);
 
   const linkClass = (path: string) =>
     `text-sm font-medium transition-colors hover:text-foreground ${
@@ -61,13 +62,17 @@ export default function Header() {
           </Link> */}
         </nav>
 
-        <button
-          onClick={() => setLang(nextLang)}
-          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-all hover:bg-secondary active:scale-95"
-        >
-          <Globe className="h-4 w-4" />
-          {nextLang.toUpperCase()}
-        </button>
+        <div className="flex items-center gap-2">
+          {availableLanguages.map((option) => (
+            <button
+              key={option}
+              onClick={() => setLang(option)}
+              className="min-w-11 rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-secondary/80 active:scale-95"
+            >
+              {option.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
     </header>
   );

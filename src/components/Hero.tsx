@@ -28,14 +28,6 @@ export default function Hero() {
               {t.hero.cta}
               <ArrowRight className="h-4 w-4" />
             </button>
-            <button
-              onClick={() => {
-                document.getElementById("sports-section")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 px-8 py-4 font-display text-base font-semibold text-white transition-all hover:bg-white/10 active:scale-[0.97]"
-            >
-              {t.hero.ctaSecondary}
-            </button>
           </div>
         </div>
       </div>

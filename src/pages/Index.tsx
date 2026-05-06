@@ -10,8 +10,8 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <Header />
       <Hero />
-      <SportCards />
       <CenterCards />
+      <SportCards />
       <HowItWorks />
       <BookingCalendar />
       <footer className="border-t border-border py-8">

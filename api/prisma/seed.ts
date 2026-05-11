@@ -9,7 +9,64 @@ const prisma = new PrismaClient({
   }),
 });
 
+const ahtmeServices = [
+  { id: "ahtme-single-ticket", key: "Kergejoustik + jousaal", icon: "T", hourlyPrice: 6, priceMin: 4, priceMax: 6 },
+  { id: "ahtme-club-training-full", key: "Registreeritud treening: kergejoustikuareen 1/1", icon: "A", hourlyPrice: 30, priceMin: 22, priceMax: 30 },
+  { id: "ahtme-club-training-half", key: "Registreeritud treening: kergejoustikuareen 1/2", icon: "A", hourlyPrice: 17, priceMin: 14, priceMax: 17 },
+  { id: "ahtme-club-training-quarter", key: "Registreeritud treening: kergejoustikuareen 1/4", icon: "A", hourlyPrice: 10, priceMin: 8, priceMax: 10 },
+  { id: "ahtme-club-training-aerobics", key: "Registreeritud treening: aeroobikasaal", icon: "A", hourlyPrice: 14, priceMin: 10, priceMax: 14 },
+  { id: "ahtme-club-training-gym", key: "Registreeritud treening: jousaal", icon: "J", hourlyPrice: 12, priceMin: 9, priceMax: 12 },
+  { id: "ahtme-unregistered-event-hall", key: "Registreerimata uritus/voistlus: kergejoustikuhall", icon: "H", hourlyPrice: 80 },
+  { id: "ahtme-unregistered-event-territory", key: "Registreerimata uritus/voistlus: hall ja territoorium", icon: "H", hourlyPrice: 90 },
+  { id: "ahtme-registered-training-full", key: "Registreeritud treening: kergejoustikuareen 1/1", icon: "R", hourlyPrice: 28, priceMin: 20, priceMax: 28 },
+  { id: "ahtme-registered-training-half", key: "Registreeritud treening: kergejoustikuareen 1/2", icon: "R", hourlyPrice: 15, priceMin: 12, priceMax: 15 },
+  { id: "ahtme-registered-training-quarter", key: "Registreeritud treening: kergejoustikuareen 1/4", icon: "R", hourlyPrice: 8, priceMin: 6, priceMax: 8 },
+  { id: "ahtme-registered-training-aerobics", key: "Registreeritud treening: aeroobikasaal", icon: "R", hourlyPrice: 12, priceMin: 9, priceMax: 12 },
+  { id: "ahtme-registered-training-gym", key: "Registreeritud treening: jousaal", icon: "J", hourlyPrice: 10, priceMin: 7, priceMax: 10 },
+  { id: "ahtme-registered-event-hall", key: "Registreeritud uritus/voistlus: kergejoustikuhall", icon: "H", hourlyPrice: 60 },
+  { id: "ahtme-registered-event-territory", key: "Registreeritud uritus/voistlus: hall ja territoorium", icon: "H", hourlyPrice: 80 },
+  { id: "ahtme-school-pe-free", key: "Koolide liikumisope, treeningud ja uritused", icon: "K", hourlyPrice: 0 },
+  { id: "ahtme-tennis-court", key: "Tennis", icon: "T", hourlyPrice: 10, priceMin: 5, priceMax: 10 },
+  { id: "ahtme-volleyball-court", key: "Vorkpall", icon: "V", hourlyPrice: 10, priceMin: 5, priceMax: 10 },
+  { id: "ahtme-badminton-court", key: "Sulgpall", icon: "S", hourlyPrice: 10, priceMin: 5, priceMax: 10 },
+  { id: "ahtme-supported-club-training", key: "Toetatavate spordiklubide ja Johvi Spordikooli treeningud", icon: "R", hourlyPrice: 10 },
+  { id: "ahtme-supported-prep-time", key: "Toetatavate spordiklubide voistluste ettevalmistamise aeg", icon: "P", hourlyPrice: 2 },
+  { id: "ahtme-unregistered-prep-time", key: "Registreerimata voistluste ja urituste ettevalmistamise aeg", icon: "P", hourlyPrice: 0 },
+  { id: "ahtme-state-school-pe", key: "HTM hallatavate koolide kehaline kasvatus ja uritused", icon: "K", hourlyPrice: 15, priceMin: 10, priceMax: 15 },
+  { id: "ahtme-city-event-free", key: "Kohtla-Jarve Linnavalitsuse korraldatav voistlus/uritus", icon: "L", hourlyPrice: 0 },
+  { id: "ahtme-table-tennis", key: "Lauatennis", icon: "L", hourlyPrice: 4, priceMin: 2, priceMax: 4 },
+  { id: "ahtme-private-running-track", key: "Jooksurada", icon: "J", hourlyPrice: 10, priceMin: 6, priceMax: 10 },
+  { id: "ahtme-package-arena-gym-tennis-sauna", key: "Pakett: areen, jalgpall, jousaal, tennis ja saun", icon: "P", hourlyPrice: 25 },
+  { id: "ahtme-package-volleyball-sauna", key: "Pakett: vorkpallivaljak ja saun", icon: "P", hourlyPrice: 20 },
+  { id: "ahtme-package-gym-tabletennis-sauna", key: "Pakett: jousaal, lauatennis ja saun", icon: "P", hourlyPrice: 20 },
+  { id: "ahtme-family-package", key: "Perepakett 2 taiskasvanut + kuni 3 last", icon: "P", hourlyPrice: 12 },
+  { id: "ahtme-sauna-small", key: "Saun", icon: "S", hourlyPrice: 10 },
+  { id: "ahtme-sauna-gym", key: "Saun+jousaal", icon: "S", hourlyPrice: 15 },
+];
+
+const getAhtmeServiceDurationMinutes = (serviceId: string) => {
+  if (serviceId.includes("single-")) return 120;
+  if (serviceId.includes("package")) return 120;
+  if (
+    serviceId.includes("carpet") ||
+    serviceId.includes("high-jump-mat") ||
+    serviceId.includes("tables-chairs")
+  ) {
+    return 24 * 60;
+  }
+
+  return 60;
+};
+
 const sports = [
+  ...ahtmeServices.map((service) => ({
+    ...service,
+    priceMin: service.priceMin ?? service.hourlyPrice,
+    priceMax: service.priceMax ?? service.hourlyPrice,
+    durationMinutes: getAhtmeServiceDurationMinutes(service.id),
+    centerIds: ["ahtme"],
+    equipmentOptions: [],
+  })),
   { id: "running", key: "running", icon: "🏃", centerIds: ["ahtme"], equipmentOptions: [], hourlyPrice: 5 },
   { id: "aerobics", key: "aerobics", icon: "🤸", centerIds: ["wiru", "spordihoone"], equipmentOptions: ["yogaMat", "music"], hourlyPrice: 8 },
   { id: "badminton", key: "badminton", icon: "🏸", centerIds: ["wiru", "spordihoone"], equipmentOptions: ["rackets", "shuttlecocks"], hourlyPrice: 12 },
@@ -99,13 +156,14 @@ const centers = [
       "Athletics hall offers a professional and year-round training environment for various athletics disciplines.",
     rating: 4.1,
     image: "",
-    openingHour: 8,
-    closingHour: 20,
-    sportIds: ["running", "basketball"],
-    courts: [
-      { id: "a1", name: "Jooksurada", sportId: "running" },
-      { id: "a2", name: "Pallisaal", sportId: "basketball" },
-    ],
+    openingHour: 7,
+    closingHour: 21,
+    sportIds: ahtmeServices.map((service) => service.id),
+    courts: ahtmeServices.map((service, index) => ({
+      id: `ahtme-service-${index + 1}`,
+      name: service.key,
+      sportId: service.id,
+    })),
   },
   {
     id: "spordihoone",
@@ -277,12 +335,20 @@ async function main() {
   await prisma.sport.deleteMany();
 
   for (const sport of sports) {
+    const priceMin = "priceMin" in sport ? sport.priceMin : sport.hourlyPrice;
+    const priceMax = "priceMax" in sport ? sport.priceMax : sport.hourlyPrice;
+    const durationMinutes =
+      "durationMinutes" in sport ? sport.durationMinutes : 60;
+
     await prisma.sport.create({
       data: {
         id: sport.id,
         key: sport.key,
         icon: sport.icon,
         hourlyPrice: sport.hourlyPrice,
+        priceMin,
+        priceMax,
+        durationMinutes,
         equipmentOptions: sport.equipmentOptions,
       },
     });

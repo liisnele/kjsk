@@ -191,7 +191,7 @@ export type EquipmentItemWhereInput = {
   OR?: Prisma.EquipmentItemWhereInput[]
   NOT?: Prisma.EquipmentItemWhereInput | Prisma.EquipmentItemWhereInput[]
   id?: Prisma.StringFilter<"EquipmentItem"> | string
-  price?: Prisma.IntFilter<"EquipmentItem"> | number
+  price?: Prisma.FloatFilter<"EquipmentItem"> | number
 }
 
 export type EquipmentItemOrderByWithRelationInput = {
@@ -204,7 +204,7 @@ export type EquipmentItemWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.EquipmentItemWhereInput | Prisma.EquipmentItemWhereInput[]
   OR?: Prisma.EquipmentItemWhereInput[]
   NOT?: Prisma.EquipmentItemWhereInput | Prisma.EquipmentItemWhereInput[]
-  price?: Prisma.IntFilter<"EquipmentItem"> | number
+  price?: Prisma.FloatFilter<"EquipmentItem"> | number
 }, "id">
 
 export type EquipmentItemOrderByWithAggregationInput = {
@@ -222,7 +222,7 @@ export type EquipmentItemScalarWhereWithAggregatesInput = {
   OR?: Prisma.EquipmentItemScalarWhereWithAggregatesInput[]
   NOT?: Prisma.EquipmentItemScalarWhereWithAggregatesInput | Prisma.EquipmentItemScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"EquipmentItem"> | string
-  price?: Prisma.IntWithAggregatesFilter<"EquipmentItem"> | number
+  price?: Prisma.FloatWithAggregatesFilter<"EquipmentItem"> | number
 }
 
 export type EquipmentItemCreateInput = {
@@ -237,12 +237,12 @@ export type EquipmentItemUncheckedCreateInput = {
 
 export type EquipmentItemUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  price?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type EquipmentItemUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  price?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type EquipmentItemCreateManyInput = {
@@ -252,12 +252,12 @@ export type EquipmentItemCreateManyInput = {
 
 export type EquipmentItemUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  price?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type EquipmentItemUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  price?: Prisma.IntFieldUpdateOperationsInput | number
+  price?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type EquipmentItemCountOrderByAggregateInput = {
@@ -737,7 +737,7 @@ export interface Prisma__EquipmentItemClient<T, Null = never, ExtArgs extends ru
  */
 export interface EquipmentItemFieldRefs {
   readonly id: Prisma.FieldRef<"EquipmentItem", 'String'>
-  readonly price: Prisma.FieldRef<"EquipmentItem", 'Int'>
+  readonly price: Prisma.FieldRef<"EquipmentItem", 'Float'>
 }
     
 

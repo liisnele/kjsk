@@ -482,14 +482,6 @@ export type SportCenterScalarRelationFilter = {
   isNot?: Prisma.SportCenterWhereInput
 }
 
-export type FloatFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type SportCenterCreateNestedOneWithoutSportsInput = {
   create?: Prisma.XOR<Prisma.SportCenterCreateWithoutSportsInput, Prisma.SportCenterUncheckedCreateWithoutSportsInput>
   connectOrCreate?: Prisma.SportCenterCreateOrConnectWithoutSportsInput

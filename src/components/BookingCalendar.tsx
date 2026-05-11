@@ -26,7 +26,7 @@ function minutesToTime(minutes: number) {
 }
 
 function bookingEndTime(booking: Booking) {
-  return minutesToTime(timeToMinutes(booking.time) + booking.duration * 60);
+  return minutesToTime(timeToMinutes(booking.time) + booking.duration);
 }
 
 function getConfirmedBookings(bookings: Booking[], date: string) {
@@ -43,7 +43,7 @@ function getCalendarRange(
   const closingTimes = centers.map((center) => center.openingHours.close * 60);
   const bookingStarts = confirmedBookings.map((booking) => timeToMinutes(booking.time));
   const bookingEnds = confirmedBookings.map(
-    (booking) => timeToMinutes(booking.time) + booking.duration * 60,
+    (booking) => timeToMinutes(booking.time) + booking.duration,
   );
 
   return {
@@ -54,7 +54,7 @@ function getCalendarRange(
 
 function getBookingSpan(booking: Booking, rangeStart: number) {
   const start = timeToMinutes(booking.time);
-  const end = start + booking.duration * 60;
+  const end = start + booking.duration;
 
   return {
     columnStart: Math.floor((start - rangeStart) / SLOT_MINUTES) + 1,
@@ -253,7 +253,7 @@ export default function BookingCalendar() {
                                 const isBooked = courtBookings.some((booking) => {
                                   const bookingStart = timeToMinutes(booking.time);
                                   const bookingEnd =
-                                    bookingStart + booking.duration * 60;
+                                    bookingStart + booking.duration;
 
                                   return slotStart < bookingEnd && slotEnd > bookingStart;
                                 });

@@ -2,6 +2,7 @@ import { useCatalogQuery } from "@/hooks/use-api-data";
 import { useLang } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Star } from "lucide-react";
+import { getLocalizedSportName } from "@/lib/sport-labels";
 
 export default function CenterCards() {
   const { lang, t } = useLang();
@@ -9,6 +10,12 @@ export default function CenterCards() {
   const { data, isLoading } = useCatalogQuery();
 
   const centers = data?.sportCenters ?? [];
+  const sports = data?.sports ?? [];
+  const getSportName = (sportId: string) => {
+    const sport = sports.find((item) => item.id === sportId);
+    if (!sport) return sportId;
+    return getLocalizedSportName(sport, lang, t.sportNames);
+  };
 
   return (
     <section className="bg-sport-gray-light py-20 md:py-28">
@@ -57,7 +64,7 @@ export default function CenterCards() {
                       key={sportId}
                       className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
                     >
-                      {t.sportNames[sportId as keyof typeof t.sportNames]}
+                      {getSportName(sportId)}
                     </span>
                   ))}
                   {center.sportIds.length > 4 && (

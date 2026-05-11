@@ -22,7 +22,10 @@ model Sport {
   id               String        @id
   key              String
   icon             String
-  hourlyPrice      Int
+  hourlyPrice      Float
+  priceMin         Float         @default(0)
+  priceMax         Float         @default(0)
+  durationMinutes  Int           @default(60)
   equipmentOptions String[]
   centerLinks      CenterSport[]
   courts           Court[]
@@ -32,7 +35,7 @@ model Sport {
 
 model EquipmentItem {
   id    String @id
-  price Int
+  price Float
 }
 
 model SportCenter {

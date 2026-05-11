@@ -41,8 +41,13 @@ const gameInclude = {
 
 export const games = new Hono();
 
+const DEMO_CENTER_ID = "ahtme";
+
 games.get("/", async (c) => {
   const items = await prisma.openGame.findMany({
+    where: {
+      centerId: DEMO_CENTER_ID,
+    },
     include: gameInclude,
     orderBy: [{ date: "asc" }, { time: "asc" }, { createdAt: "desc" }],
   });
@@ -52,6 +57,10 @@ games.get("/", async (c) => {
 
 games.post("/", zValidator("json", gameSchema), async (c) => {
   const payload = c.req.valid("json");
+
+  if (payload.centerId !== DEMO_CENTER_ID) {
+    return c.json({ message: "Only Ahtme sports hall is available in this demo." }, 400);
+  }
 
   const game = await prisma.$transaction(async (tx) => {
     await tx.booking.create({

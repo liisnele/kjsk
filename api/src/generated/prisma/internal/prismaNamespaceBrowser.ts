@@ -83,6 +83,9 @@ export const SportScalarFieldEnum = {
   key: 'key',
   icon: 'icon',
   hourlyPrice: 'hourlyPrice',
+  priceMin: 'priceMin',
+  priceMax: 'priceMax',
+  durationMinutes: 'durationMinutes',
   equipmentOptions: 'equipmentOptions'
 } as const
 

@@ -1,13 +1,17 @@
 import { useCatalogQuery } from "@/hooks/use-api-data";
 import { useLang } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
+import { getDurationLabel, getSportPriceRange } from "@/lib/pricing";
+import { getLocalizedSportName } from "@/lib/sport-labels";
 
 export default function SportCards() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const navigate = useNavigate();
   const { data, isLoading } = useCatalogQuery();
 
   const sports = data?.sports ?? [];
+  const getSportName = (sport: typeof sports[number]) =>
+    getLocalizedSportName(sport, lang, t.sportNames);
 
   return (
     <section id="sports-section" className="py-20 md:py-28">
@@ -34,7 +38,10 @@ export default function SportCards() {
               >
                 <span className="text-3xl">{sport.icon}</span>
                 <span className="text-sm font-medium">
-                  {t.sportNames[sport.key as keyof typeof t.sportNames]}
+                  {getSportName(sport)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {getSportPriceRange(sport, lang)} · {getDurationLabel(sport.durationMinutes)}
                 </span>
               </button>
             ))}

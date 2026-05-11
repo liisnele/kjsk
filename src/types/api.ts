@@ -5,6 +5,9 @@ export interface Sport {
   centerIds: string[];
   equipmentOptions: string[];
   hourlyPrice: number;
+  priceMin: number;
+  priceMax: number;
+  durationMinutes: number;
 }
 
 export interface Court {

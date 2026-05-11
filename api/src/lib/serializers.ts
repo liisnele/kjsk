@@ -31,6 +31,9 @@ export const serializeSport = (sport: SportWithCenterLinks) => ({
   key: sport.key,
   icon: sport.icon,
   hourlyPrice: sport.hourlyPrice,
+  priceMin: sport.priceMin,
+  priceMax: sport.priceMax,
+  durationMinutes: sport.durationMinutes,
   centerIds: sport.centerLinks.map((link) => link.centerId),
   equipmentOptions: sport.equipmentOptions,
 });

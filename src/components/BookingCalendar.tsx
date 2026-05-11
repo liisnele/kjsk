@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { enUS, et, ru } from "date-fns/locale";
 import type { Booking, Court, SportCenter } from "@/types/api";
+import { getLocalizedSportName } from "@/lib/sport-labels";
 
 const SLOT_MINUTES = 30;
 const FALLBACK_OPEN = 8 * 60;
@@ -92,6 +93,8 @@ export default function BookingCalendar() {
   const sports = useMemo(() => catalog?.sports ?? [], [catalog?.sports]);
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const calendarLocale = lang === "ru" ? ru : lang === "en" ? enUS : et;
+  const getSportName = (sport: typeof sports[number]) =>
+    getLocalizedSportName(sport, lang, t.sportNames);
 
   const centersToShow = useMemo(
     () =>
@@ -238,7 +241,7 @@ export default function BookingCalendar() {
                           >
                             <div className="flex min-h-12 items-center gap-1.5 border-b border-r border-border p-2 text-xs font-medium whitespace-nowrap last:border-b-0">
                               <span>{sport?.icon}</span>
-                              {court.name}
+                              {sport ? getSportName(sport) : court.name}
                             </div>
                             <div
                               className="relative grid border-b border-border"

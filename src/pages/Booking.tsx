@@ -21,6 +21,7 @@ import {
 } from "@/hooks/use-api-data";
 import { generateTimeSlots } from "@/lib/availability";
 import {
+  type ArenaOrganizationType,
   getDurationLabel,
   getSportPriceForDateTime,
   getSportPriceRange,
@@ -31,16 +32,12 @@ import { cn } from "@/lib/utils";
 type ServiceCategoryId =
   | "individual"
   | "packages"
-  | "schools"
-  | "unregistered"
-  | "registered";
+  | "clubsAndSchools";
 
 const serviceCategoryIds: ServiceCategoryId[] = [
   "individual",
   "packages",
-  "schools",
-  "unregistered",
-  "registered",
+  "clubsAndSchools",
 ];
 
 const serviceCategoryBySportId: Record<string, ServiceCategoryId> = {
@@ -56,30 +53,46 @@ const serviceCategoryBySportId: Record<string, ServiceCategoryId> = {
   "ahtme-family-package": "packages",
   "ahtme-sauna-small": "individual",
   "ahtme-sauna-gym": "individual",
-  "ahtme-school-pe-free": "schools",
-  "ahtme-state-school-pe": "schools",
-  "ahtme-city-event-free": "schools",
-  "ahtme-club-training-full": "unregistered",
-  "ahtme-club-training-half": "unregistered",
-  "ahtme-club-training-quarter": "unregistered",
-  "ahtme-club-training-aerobics": "unregistered",
-  "ahtme-club-training-gym": "unregistered",
-  "ahtme-unregistered-event-hall": "unregistered",
-  "ahtme-unregistered-event-territory": "unregistered",
-  "ahtme-unregistered-prep-time": "unregistered",
-  "ahtme-registered-training-full": "registered",
-  "ahtme-registered-training-half": "registered",
-  "ahtme-registered-training-quarter": "registered",
-  "ahtme-registered-training-aerobics": "registered",
-  "ahtme-registered-training-gym": "registered",
-  "ahtme-registered-event-hall": "registered",
-  "ahtme-registered-event-territory": "registered",
-  "ahtme-supported-club-training": "registered",
-  "ahtme-supported-prep-time": "registered",
+  "ahtme-school-pe-free": "clubsAndSchools",
+  "ahtme-state-school-pe": "clubsAndSchools",
+  "ahtme-club-training-full": "clubsAndSchools",
+  "ahtme-club-training-half": "clubsAndSchools",
+  "ahtme-club-training-quarter": "clubsAndSchools",
+  "ahtme-club-training-aerobics": "clubsAndSchools",
+  "ahtme-club-training-gym": "clubsAndSchools",
+  "ahtme-registered-training-full": "clubsAndSchools",
+  "ahtme-registered-training-half": "clubsAndSchools",
+  "ahtme-registered-training-quarter": "clubsAndSchools",
+  "ahtme-registered-training-aerobics": "clubsAndSchools",
+  "ahtme-registered-training-gym": "clubsAndSchools",
+  "ahtme-supported-club-training": "clubsAndSchools",
 };
 
 const getServiceCategory = (sportId: string): ServiceCategoryId =>
   serviceCategoryBySportId[sportId] ?? "individual";
+
+const hiddenSportIds = new Set([
+  "ahtme-unregistered-event-hall",
+  "ahtme-unregistered-event-territory",
+  "ahtme-unregistered-prep-time",
+  "ahtme-registered-event-hall",
+  "ahtme-registered-event-territory",
+  "ahtme-supported-prep-time",
+  "ahtme-city-event-free",
+  "ahtme-registered-training-full",
+  "ahtme-registered-training-half",
+  "ahtme-registered-training-quarter",
+  "ahtme-registered-training-aerobics",
+  "ahtme-registered-training-gym",
+]);
+
+const arenaOrganizationSportIds = new Set([
+  "ahtme-club-training-full",
+  "ahtme-club-training-half",
+  "ahtme-club-training-quarter",
+  "ahtme-club-training-aerobics",
+  "ahtme-club-training-gym",
+]);
 
 const serviceNotes: Record<string, Record<"et" | "en" | "ru", string>> = {
   "ahtme-table-tennis": {
@@ -96,6 +109,11 @@ const serviceNotes: Record<string, Record<"et" | "en" | "ru", string>> = {
     et: "Maksimaalselt 10 inimest",
     en: "Maximum 10 people",
     ru: "Максимум 10 человек",
+  },
+  "ahtme-family-package": {
+    et: "2 täiskasvanut ja kuni 3 last",
+    en: "2 adults and up to 3 children",
+    ru: "2 взрослых и до 3 детей",
   },
 };
 
@@ -127,7 +145,9 @@ export default function BookingPage() {
     email: "",
     phone: "",
     participants: "" as number | "",
-    ticketType: "adult" as "adult" | "discount",
+    adultTickets: 1,
+    discountTickets: 0,
+    arenaOrganizationType: "registered" as ArenaOrganizationType,
     equipment: [] as string[],
     note: "",
   });
@@ -136,9 +156,7 @@ export default function BookingPage() {
   >({
     individual: true,
     packages: false,
-    schools: false,
-    unregistered: false,
-    registered: false,
+    clubsAndSchools: false,
   });
 
   const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -156,11 +174,13 @@ export default function BookingPage() {
   }, [selectedSport, sportCenters]);
 
   const availableSports = useMemo(() => {
-    if (!selectedCenter) return sports;
+    const visibleSports = sports.filter((sport) => !hiddenSportIds.has(sport.id));
+
+    if (!selectedCenter) return visibleSports;
     const center = sportCenters.find((item) => item.id === selectedCenter);
     return center
-      ? sports.filter((sport) => center.sportIds.includes(sport.id))
-      : sports;
+      ? visibleSports.filter((sport) => center.sportIds.includes(sport.id))
+      : visibleSports;
   }, [selectedCenter, sportCenters, sports]);
 
   const groupedAvailableSports = useMemo(
@@ -179,6 +199,8 @@ export default function BookingPage() {
   const selectedSportData = sports.find((sport) => sport.id === selectedSport);
   const selectedDurationMinutes = selectedSportData?.durationMinutes ?? 60;
   const isSingleTicket = selectedSportData?.id === "ahtme-single-ticket";
+  const isArenaOrganizationBooking =
+    !!selectedSportData && arenaOrganizationSportIds.has(selectedSportData.id);
   const participantLimit =
     selectedSportData?.id === "ahtme-sauna-small"
       ? 5
@@ -189,40 +211,54 @@ export default function BookingPage() {
     et: {
       type: "Pileti tüüp",
       adult: "Täiskasvanu",
-      discount: "Õpilane / eakas",
+      discount: "Laps / sooduspilet",
+      countRequired: "Vali vähemalt üks pilet.",
     },
     en: {
       type: "Ticket type",
       adult: "Adult",
-      discount: "Student / senior",
+      discount: "Child / discount ticket",
+      countRequired: "Choose at least one ticket.",
     },
     ru: {
       type: "Тип билета",
       adult: "Взрослый",
-      discount: "Ученик / пожилой",
+      discount: "Ребенок / льготный билет",
+      countRequired: "Выберите хотя бы один билет.",
+    },
+  }[lang];
+  const arenaOrganizationText = {
+    et: {
+      type: "Organisatsiooni tüüp",
+      registered: "K-J haldusterritooriumil registreeritud organisatsioon",
+      unregistered: "Registreerimata organisatsioon",
+    },
+    en: {
+      type: "Organization type",
+      registered: "Organization registered in K-J administrative territory",
+      unregistered: "Unregistered organization",
+    },
+    ru: {
+      type: "Тип организации",
+      registered: "Организация, зарегистрированная на административной территории К-Й",
+      unregistered: "Незарегистрированная организация",
     },
   }[lang];
   const serviceCategoryText = {
     et: {
       individual: "Spordi ajad üksikinimesele",
       packages: "Paketid",
-      schools: "Koolidele",
-      unregistered: "K-J registreerimata organisatsioonidele",
-      registered: "Registreeritud organisatsioonidele",
+      clubsAndSchools: "Spordiklubid ja koolid",
     },
     en: {
       individual: "Individual sport times",
       packages: "Packages",
-      schools: "Schools",
-      unregistered: "K-J unregistered organizations",
-      registered: "Registered organizations",
+      clubsAndSchools: "Sports clubs and schools",
     },
     ru: {
       individual: "Индивидуальные спортивные бронирования",
       packages: "Пакеты",
-      schools: "Для школ",
-      unregistered: "Незарегистрированные организации К-Й",
-      registered: "Зарегистрированные организации",
+      clubsAndSchools: "Спортивные клубы и школы",
     },
   }[lang];
   const validationText = {
@@ -287,22 +323,27 @@ export default function BookingPage() {
       ),
     [equipmentPrices, form.equipment],
   );
+  const singleTicketParticipants = form.adultTickets + form.discountTickets;
+  const singleTicketTotal = form.adultTickets * 6 + form.discountTickets * 4;
 
   const totalPrice = useMemo(
     () =>
       (isSingleTicket
-        ? form.ticketType === "discount"
-          ? 4
-          : selectedSportData
-            ? getSportPriceForDateTime(selectedSportData, dateStr, selectedTime)
-            : 0
+        ? singleTicketTotal
         : selectedSportData
-          ? getSportPriceForDateTime(selectedSportData, dateStr, selectedTime)
+          ? getSportPriceForDateTime(
+              selectedSportData,
+              dateStr,
+              selectedTime,
+              isArenaOrganizationBooking ? form.arenaOrganizationType : undefined,
+            )
           : sportPrices[selectedSport] || 0) + equipmentTotal,
     [
       dateStr,
       equipmentTotal,
-      form.ticketType,
+      singleTicketTotal,
+      form.arenaOrganizationType,
+      isArenaOrganizationBooking,
       isSingleTicket,
       selectedSport,
       selectedSportData,
@@ -332,6 +373,9 @@ export default function BookingPage() {
   const phoneValue = form.phone.trim();
   const participantValue =
     form.participants === "" ? Number.NaN : Number(form.participants);
+  const effectiveParticipantValue = isSingleTicket
+    ? singleTicketParticipants
+    : participantValue;
   const phoneDigits = phoneValue.replace(/\D/g, "").length;
   const step4ValidationMessages = [
     !form.name.trim() ? validationText.nameRequired : "",
@@ -345,12 +389,15 @@ export default function BookingPage() {
       : /^\+?[0-9\s()-]+$/.test(phoneValue) && phoneDigits >= 7
         ? ""
         : validationText.phoneInvalid,
-    form.participants === ""
+    isSingleTicket && singleTicketParticipants < 1
+      ? ticketText.countRequired
+      : "",
+    !isSingleTicket && form.participants === ""
       ? validationText.participantsRequired
-      : Number.isInteger(participantValue) && participantValue >= 1
+      : isSingleTicket || (Number.isInteger(participantValue) && participantValue >= 1)
         ? ""
         : validationText.participantsInvalid,
-    form.participants !== "" && participantValue > participantLimit
+    effectiveParticipantValue > participantLimit
       ? validationText.participantsMax(participantLimit)
       : "",
   ].filter(Boolean);
@@ -391,14 +438,19 @@ export default function BookingPage() {
       name: form.name,
       email: form.email,
       phone: form.phone,
-      participants: Number(form.participants),
+      participants: isSingleTicket
+        ? singleTicketParticipants
+        : Number(form.participants),
       equipment: form.equipment,
       note: [
         isSingleTicket
-          ? `${ticketText.type}: ${
-              form.ticketType === "discount"
-                ? ticketText.discount
-                : ticketText.adult
+          ? `${ticketText.adult}: ${form.adultTickets}, ${ticketText.discount}: ${form.discountTickets}`
+          : "",
+        isArenaOrganizationBooking
+          ? `${arenaOrganizationText.type}: ${
+              form.arenaOrganizationType === "registered"
+                ? arenaOrganizationText.registered
+                : arenaOrganizationText.unregistered
             }`
           : "",
         form.note,
@@ -536,8 +588,7 @@ export default function BookingPage() {
                                   "ring-2 ring-primary bg-sport-yellow-light",
                               )}
                             >
-                              <span className="text-2xl">{sport.icon}</span>
-                              <span className="text-sm font-medium">
+                              <span className="text-center text-base font-semibold">
                                 {getSportName(sport)}
                               </span>
                               <span className="text-xs text-muted-foreground">
@@ -607,8 +658,7 @@ export default function BookingPage() {
                                     "ring-2 ring-primary bg-sport-yellow-light",
                                 )}
                               >
-                                <span className="text-2xl">{sport.icon}</span>
-                                <span className="text-sm font-medium">
+                                <span className="text-center text-base font-semibold">
                                   {getSportName(sport)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
@@ -733,23 +783,25 @@ export default function BookingPage() {
                   onChange={(event) => setForm({ ...form, phone: event.target.value })}
                   className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
-                <input
-                  type="number"
-                  min={1}
-                  max={participantLimit}
-                  placeholder={t.booking.participantsPlaceholder}
-                  value={form.participants}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    if (value === "") {
-                      setForm({ ...form, participants: "" });
-                      return;
-                    }
+                {!isSingleTicket && (
+                  <input
+                    type="number"
+                    min={1}
+                    max={participantLimit}
+                    placeholder={t.booking.participantsPlaceholder}
+                    value={form.participants}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (value === "") {
+                        setForm({ ...form, participants: "" });
+                        return;
+                      }
 
-                    setForm({ ...form, participants: Number(value) });
-                  }}
-                  className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                />
+                      setForm({ ...form, participants: Number(value) });
+                    }}
+                    className="rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                )}
 
                 {isSingleTicket && (
                   <div>
@@ -758,26 +810,97 @@ export default function BookingPage() {
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        { id: "adult" as const, label: ticketText.adult, price: 6 },
-                        { id: "discount" as const, label: ticketText.discount, price: 4 },
+                        {
+                          id: "adultTickets" as const,
+                          label: ticketText.adult,
+                          price: 6,
+                        },
+                        {
+                          id: "discountTickets" as const,
+                          label: ticketText.discount,
+                          price: 4,
+                        },
                       ].map((option) => (
-                        <button
+                        <label
                           key={option.id}
-                          type="button"
-                          onClick={() => setForm({ ...form, ticketType: option.id })}
-                          className={cn(
-                            "rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all active:scale-95",
-                            form.ticketType === option.id
-                              ? "border-primary bg-sport-yellow-light ring-2 ring-primary"
-                              : "border-border bg-card hover:bg-secondary",
-                          )}
+                          className="rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium"
                         >
                           <span className="block">{option.label}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {option.price} eurot
+                          <span className="mt-1 block text-xs text-muted-foreground">
+                            {formatBookingPrice(option.price)}
                           </span>
-                        </button>
+                          <input
+                            type="number"
+                            min={0}
+                            max={50}
+                            value={form[option.id]}
+                            onChange={(event) =>
+                              setForm({
+                                ...form,
+                                [option.id]: Math.max(
+                                  0,
+                                  Number(event.target.value) || 0,
+                                ),
+                              })
+                            }
+                            className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </label>
                       ))}
+                    </div>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      {t.booking.participants}: {singleTicketParticipants}
+                    </div>
+                  </div>
+                )}
+
+                {isArenaOrganizationBooking && selectedSportData && (
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">
+                      {arenaOrganizationText.type}
+                    </label>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {[
+                        {
+                          id: "registered" as const,
+                          label: arenaOrganizationText.registered,
+                        },
+                        {
+                          id: "unregistered" as const,
+                          label: arenaOrganizationText.unregistered,
+                        },
+                      ].map((option) => {
+                        const price = getSportPriceForDateTime(
+                          selectedSportData,
+                          dateStr,
+                          selectedTime,
+                          option.id,
+                        );
+
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() =>
+                              setForm({
+                                ...form,
+                                arenaOrganizationType: option.id,
+                              })
+                            }
+                            className={cn(
+                              "rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all active:scale-95",
+                              form.arenaOrganizationType === option.id
+                                ? "border-primary bg-sport-yellow-light ring-2 ring-primary"
+                                : "border-border bg-card hover:bg-secondary",
+                            )}
+                          >
+                            <span className="block">{option.label}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatBookingPrice(price)}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -852,7 +975,6 @@ export default function BookingPage() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.step2}</span>
                     <span className="font-medium">
-                      {selectedSportData?.icon}{" "}
                       {selectedSportData
                         ? getSportName(selectedSportData)
                         : ""}
@@ -866,7 +988,9 @@ export default function BookingPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.participants}</span>
-                    <span className="font-medium">{form.participants}</span>
+                    <span className="font-medium">
+                      {isSingleTicket ? singleTicketParticipants : form.participants}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t.booking.fullName}</span>

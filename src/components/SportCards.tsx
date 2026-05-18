@@ -36,8 +36,7 @@ export default function SportCards() {
                 className={`sport-card flex flex-col items-center gap-3 text-center fade-in-up stagger-${Math.min(index + 1, 5)}`}
                 style={{ animationDelay: `${index * 0.06}s` }}
               >
-                <span className="text-3xl">{sport.icon}</span>
-                <span className="text-sm font-medium">
+                <span className="text-base font-semibold">
                   {getSportName(sport)}
                 </span>
                 <span className="text-xs text-muted-foreground">

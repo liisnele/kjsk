@@ -14,6 +14,19 @@ const arenaClubTrainingSportIds = new Set([
   "ahtme-supported-club-training",
 ]);
 
+const arenaCapacityBySportId: Record<string, number> = {
+  "ahtme-single-ticket": 0.5,
+  "ahtme-club-training-full": 1,
+  "ahtme-club-training-half": 0.5,
+  "ahtme-club-training-quarter": 0.25,
+  "ahtme-supported-club-training": 1,
+};
+
+const fullArenaSportIds = new Set([
+  "ahtme-club-training-full",
+  "ahtme-supported-club-training",
+]);
+
 const packageComponentSportIds: Record<string, string[]> = {
   "ahtme-package-arena-gym-tennis-sauna": [
     "ahtme-single-ticket",
@@ -101,14 +114,54 @@ const shouldBookingBlockSlot = (
   }
 
   if (
-    (requestedIndividual && bookedClubTraining) ||
-    (requestedClubTraining && bookedIndividual) ||
+    (requestedIndividual && fullArenaSportIds.has(booking.sportId)) ||
+    (fullArenaSportIds.has(requestedSportId) && bookedIndividual)
+  ) {
+    return true;
+  }
+
+  if (
     (requestedClubTraining && bookedClubTraining)
   ) {
     return true;
   }
 
   return booking.courtId === requestedCourtId;
+};
+
+const getArenaCapacity = (sportId: string) =>
+  arenaCapacityBySportId[sportId] ?? 0;
+
+const isArenaCapacityUnavailable = (
+  requestedSportId: string,
+  bookings: Booking[],
+  date: string,
+  time: string,
+  duration: number,
+) => {
+  const requestedCapacity = getArenaCapacity(requestedSportId);
+
+  if (requestedCapacity === 0) {
+    return false;
+  }
+
+  const slotStart = new Date(`${date}T${time}`).getTime();
+  const slotEnd = slotStart + duration * 60 * 1000;
+  const usedCapacity = bookings.reduce((total, booking) => {
+    const bookingCapacity = getArenaCapacity(booking.sportId);
+
+    if (bookingCapacity === 0) {
+      return total;
+    }
+
+    const bookingStart = new Date(`${booking.date}T${booking.time}`).getTime();
+    const bookingEnd = bookingStart + booking.duration * 60 * 1000;
+    const overlaps = !(slotEnd <= bookingStart || slotStart >= bookingEnd);
+
+    return overlaps ? total + bookingCapacity : total;
+  }, 0);
+
+  return usedCapacity + requestedCapacity > 1;
 };
 
 export function generateTimeSlots(
@@ -169,9 +222,17 @@ export function generateTimeSlots(
     new Date(`${dateValue}T${timeValue}`).getTime();
 
   const isTimeBooked = (courtId: string, time: string, duration = durationMinutes) =>
+    isArenaCapacityUnavailable(
+      sportId,
+      bookings.filter((booking) => booking.centerId === centerId),
+      date,
+      time,
+      duration,
+    ) ||
     bookings.some((booking) => {
       if (
         booking.centerId !== centerId ||
+        (getArenaCapacity(sportId) > 0 && getArenaCapacity(booking.sportId) > 0) ||
         !shouldBookingBlockSlot(sportId, courtId, booking)
       ) {
         return false;

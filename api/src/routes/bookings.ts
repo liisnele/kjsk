@@ -24,7 +24,14 @@ const bookingSchema = z.object({
 export const bookings = new Hono();
 
 const DEMO_CENTER_ID = "ahtme";
-const HIDDEN_DEMO_SPORT_IDS = new Set(["ahtme-changing-room"]);
+const HIDDEN_DEMO_SPORT_IDS = new Set([
+  "ahtme-changing-room",
+  "ahtme-registered-training-full",
+  "ahtme-registered-training-half",
+  "ahtme-registered-training-quarter",
+  "ahtme-registered-training-aerobics",
+  "ahtme-registered-training-gym",
+]);
 const individualArenaSportIds = new Set([
   "ahtme-single-ticket",
 ]);
@@ -35,6 +42,19 @@ const arenaClubTrainingSportIds = new Set([
   "ahtme-registered-training-full",
   "ahtme-registered-training-half",
   "ahtme-registered-training-quarter",
+  "ahtme-supported-club-training",
+]);
+
+const arenaCapacityBySportId: Record<string, number> = {
+  "ahtme-single-ticket": 0.5,
+  "ahtme-club-training-full": 1,
+  "ahtme-club-training-half": 0.5,
+  "ahtme-club-training-quarter": 0.25,
+  "ahtme-supported-club-training": 1,
+};
+
+const fullArenaSportIds = new Set([
+  "ahtme-club-training-full",
   "ahtme-supported-club-training",
 ]);
 const packageComponentSportIds: Record<string, string[]> = {
@@ -77,14 +97,51 @@ const shouldBookingBlockSlot = (
   }
 
   if (
-    (requestedIndividual && bookedClubTraining) ||
-    (requestedClubTraining && bookedIndividual) ||
+    (requestedIndividual && fullArenaSportIds.has(booking.sportId)) ||
+    (fullArenaSportIds.has(requestedSportId) && bookedIndividual)
+  ) {
+    return true;
+  }
+
+  if (
     (requestedClubTraining && bookedClubTraining)
   ) {
     return true;
   }
 
   return booking.courtId === requestedCourtId;
+};
+
+const getArenaCapacity = (sportId: string) =>
+  arenaCapacityBySportId[sportId] ?? 0;
+
+const isArenaCapacityUnavailable = (
+  requestedSportId: string,
+  existingBookings: Array<{ sportId: string; date: string; time: string; duration: number }>,
+  requestedStart: number,
+  requestedEnd: number,
+) => {
+  const requestedCapacity = getArenaCapacity(requestedSportId);
+
+  if (requestedCapacity === 0) {
+    return false;
+  }
+
+  const usedCapacity = existingBookings.reduce((total, booking) => {
+    const bookingCapacity = getArenaCapacity(booking.sportId);
+
+    if (bookingCapacity === 0) {
+      return total;
+    }
+
+    const bookedStart = new Date(`${booking.date}T${booking.time}`).getTime();
+    const bookedEnd = bookedStart + booking.duration * 60 * 1000;
+    const overlaps = !(requestedEnd <= bookedStart || requestedStart >= bookedEnd);
+
+    return overlaps ? total + bookingCapacity : total;
+  }, 0);
+
+  return usedCapacity + requestedCapacity > 1;
 };
 
 const getOpeningWindow = (centerId: string, date: string) => {
@@ -196,8 +253,21 @@ bookings.post("/", zValidator("json", bookingSchema), async (c) => {
   const requestedStart = new Date(`${payload.date}T${payload.time}`).getTime();
   const requestedEnd = requestedStart + sport.durationMinutes * 60 * 1000;
   const overlapsCourt = (requestedSportId: string, requestedCourtId: string) =>
+    isArenaCapacityUnavailable(
+      requestedSportId,
+      existingBookings,
+      requestedStart,
+      requestedEnd,
+    ) ||
     existingBookings.some((item) => {
       if (!shouldBookingBlockSlot(requestedSportId, requestedCourtId, item)) {
+        return false;
+      }
+
+      if (
+        getArenaCapacity(requestedSportId) > 0 &&
+        getArenaCapacity(item.sportId) > 0
+      ) {
         return false;
       }
 

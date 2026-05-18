@@ -240,7 +240,6 @@ export default function BookingCalendar() {
                             style={{ gridTemplateColumns }}
                           >
                             <div className="flex min-h-12 items-center gap-1.5 border-b border-r border-border p-2 text-xs font-medium whitespace-nowrap last:border-b-0">
-                              <span>{sport?.icon}</span>
                               {sport ? getSportName(sport) : court.name}
                             </div>
                             <div

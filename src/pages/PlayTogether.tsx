@@ -229,7 +229,7 @@ export default function PlayTogetherPage() {
                   <option value="">{t.booking.selectSport}</option>
                   {sports.map((sport) => (
                     <option key={sport.id} value={sport.id}>
-                      {sport.icon} {getSportName(sport)}
+                      {getSportName(sport)}
                     </option>
                   ))}
                 </select>
@@ -439,7 +439,6 @@ export default function PlayTogetherPage() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-2xl">{sport?.icon}</span>
                       <h3 className="font-display text-lg font-semibold">
                         {sport ? getSportName(sport) : game.sportId}
                       </h3>

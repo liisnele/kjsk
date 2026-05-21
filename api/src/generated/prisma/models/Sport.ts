@@ -43,7 +43,6 @@ export type SportSumAggregateOutputType = {
 export type SportMinAggregateOutputType = {
   id: string | null
   key: string | null
-  icon: string | null
   hourlyPrice: number | null
   priceMin: number | null
   priceMax: number | null
@@ -53,7 +52,6 @@ export type SportMinAggregateOutputType = {
 export type SportMaxAggregateOutputType = {
   id: string | null
   key: string | null
-  icon: string | null
   hourlyPrice: number | null
   priceMin: number | null
   priceMax: number | null
@@ -63,7 +61,6 @@ export type SportMaxAggregateOutputType = {
 export type SportCountAggregateOutputType = {
   id: number
   key: number
-  icon: number
   hourlyPrice: number
   priceMin: number
   priceMax: number
@@ -90,7 +87,6 @@ export type SportSumAggregateInputType = {
 export type SportMinAggregateInputType = {
   id?: true
   key?: true
-  icon?: true
   hourlyPrice?: true
   priceMin?: true
   priceMax?: true
@@ -100,7 +96,6 @@ export type SportMinAggregateInputType = {
 export type SportMaxAggregateInputType = {
   id?: true
   key?: true
-  icon?: true
   hourlyPrice?: true
   priceMin?: true
   priceMax?: true
@@ -110,7 +105,6 @@ export type SportMaxAggregateInputType = {
 export type SportCountAggregateInputType = {
   id?: true
   key?: true
-  icon?: true
   hourlyPrice?: true
   priceMin?: true
   priceMax?: true
@@ -208,7 +202,6 @@ export type SportGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
 export type SportGroupByOutputType = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin: number
   priceMax: number
@@ -242,7 +235,6 @@ export type SportWhereInput = {
   NOT?: Prisma.SportWhereInput | Prisma.SportWhereInput[]
   id?: Prisma.StringFilter<"Sport"> | string
   key?: Prisma.StringFilter<"Sport"> | string
-  icon?: Prisma.StringFilter<"Sport"> | string
   hourlyPrice?: Prisma.FloatFilter<"Sport"> | number
   priceMin?: Prisma.FloatFilter<"Sport"> | number
   priceMax?: Prisma.FloatFilter<"Sport"> | number
@@ -257,7 +249,6 @@ export type SportWhereInput = {
 export type SportOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   key?: Prisma.SortOrder
-  icon?: Prisma.SortOrder
   hourlyPrice?: Prisma.SortOrder
   priceMin?: Prisma.SortOrder
   priceMax?: Prisma.SortOrder
@@ -275,7 +266,6 @@ export type SportWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.SportWhereInput[]
   NOT?: Prisma.SportWhereInput | Prisma.SportWhereInput[]
   key?: Prisma.StringFilter<"Sport"> | string
-  icon?: Prisma.StringFilter<"Sport"> | string
   hourlyPrice?: Prisma.FloatFilter<"Sport"> | number
   priceMin?: Prisma.FloatFilter<"Sport"> | number
   priceMax?: Prisma.FloatFilter<"Sport"> | number
@@ -290,7 +280,6 @@ export type SportWhereUniqueInput = Prisma.AtLeast<{
 export type SportOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   key?: Prisma.SortOrder
-  icon?: Prisma.SortOrder
   hourlyPrice?: Prisma.SortOrder
   priceMin?: Prisma.SortOrder
   priceMax?: Prisma.SortOrder
@@ -309,7 +298,6 @@ export type SportScalarWhereWithAggregatesInput = {
   NOT?: Prisma.SportScalarWhereWithAggregatesInput | Prisma.SportScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Sport"> | string
   key?: Prisma.StringWithAggregatesFilter<"Sport"> | string
-  icon?: Prisma.StringWithAggregatesFilter<"Sport"> | string
   hourlyPrice?: Prisma.FloatWithAggregatesFilter<"Sport"> | number
   priceMin?: Prisma.FloatWithAggregatesFilter<"Sport"> | number
   priceMax?: Prisma.FloatWithAggregatesFilter<"Sport"> | number
@@ -320,7 +308,6 @@ export type SportScalarWhereWithAggregatesInput = {
 export type SportCreateInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -335,7 +322,6 @@ export type SportCreateInput = {
 export type SportUncheckedCreateInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -350,7 +336,6 @@ export type SportUncheckedCreateInput = {
 export type SportUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -365,7 +350,6 @@ export type SportUpdateInput = {
 export type SportUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -380,7 +364,6 @@ export type SportUncheckedUpdateInput = {
 export type SportCreateManyInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -391,7 +374,6 @@ export type SportCreateManyInput = {
 export type SportUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -402,7 +384,6 @@ export type SportUpdateManyMutationInput = {
 export type SportUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -421,7 +402,6 @@ export type StringNullableListFilter<$PrismaModel = never> = {
 export type SportCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   key?: Prisma.SortOrder
-  icon?: Prisma.SortOrder
   hourlyPrice?: Prisma.SortOrder
   priceMin?: Prisma.SortOrder
   priceMax?: Prisma.SortOrder
@@ -439,7 +419,6 @@ export type SportAvgOrderByAggregateInput = {
 export type SportMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   key?: Prisma.SortOrder
-  icon?: Prisma.SortOrder
   hourlyPrice?: Prisma.SortOrder
   priceMin?: Prisma.SortOrder
   priceMax?: Prisma.SortOrder
@@ -449,7 +428,6 @@ export type SportMaxOrderByAggregateInput = {
 export type SportMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   key?: Prisma.SortOrder
-  icon?: Prisma.SortOrder
   hourlyPrice?: Prisma.SortOrder
   priceMin?: Prisma.SortOrder
   priceMax?: Prisma.SortOrder
@@ -556,7 +534,6 @@ export type SportUpdateOneRequiredWithoutOpenGamesNestedInput = {
 export type SportCreateWithoutCenterLinksInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -570,7 +547,6 @@ export type SportCreateWithoutCenterLinksInput = {
 export type SportUncheckedCreateWithoutCenterLinksInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -600,7 +576,6 @@ export type SportUpdateToOneWithWhereWithoutCenterLinksInput = {
 export type SportUpdateWithoutCenterLinksInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -614,7 +589,6 @@ export type SportUpdateWithoutCenterLinksInput = {
 export type SportUncheckedUpdateWithoutCenterLinksInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -628,7 +602,6 @@ export type SportUncheckedUpdateWithoutCenterLinksInput = {
 export type SportCreateWithoutCourtsInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -642,7 +615,6 @@ export type SportCreateWithoutCourtsInput = {
 export type SportUncheckedCreateWithoutCourtsInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -672,7 +644,6 @@ export type SportUpdateToOneWithWhereWithoutCourtsInput = {
 export type SportUpdateWithoutCourtsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -686,7 +657,6 @@ export type SportUpdateWithoutCourtsInput = {
 export type SportUncheckedUpdateWithoutCourtsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -700,7 +670,6 @@ export type SportUncheckedUpdateWithoutCourtsInput = {
 export type SportCreateWithoutBookingsInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -714,7 +683,6 @@ export type SportCreateWithoutBookingsInput = {
 export type SportUncheckedCreateWithoutBookingsInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -744,7 +712,6 @@ export type SportUpdateToOneWithWhereWithoutBookingsInput = {
 export type SportUpdateWithoutBookingsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -758,7 +725,6 @@ export type SportUpdateWithoutBookingsInput = {
 export type SportUncheckedUpdateWithoutBookingsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -772,7 +738,6 @@ export type SportUncheckedUpdateWithoutBookingsInput = {
 export type SportCreateWithoutOpenGamesInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -786,7 +751,6 @@ export type SportCreateWithoutOpenGamesInput = {
 export type SportUncheckedCreateWithoutOpenGamesInput = {
   id: string
   key: string
-  icon: string
   hourlyPrice: number
   priceMin?: number
   priceMax?: number
@@ -816,7 +780,6 @@ export type SportUpdateToOneWithWhereWithoutOpenGamesInput = {
 export type SportUpdateWithoutOpenGamesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -830,7 +793,6 @@ export type SportUpdateWithoutOpenGamesInput = {
 export type SportUncheckedUpdateWithoutOpenGamesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   key?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.StringFieldUpdateOperationsInput | string
   hourlyPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMin?: Prisma.FloatFieldUpdateOperationsInput | number
   priceMax?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -902,7 +864,6 @@ export type SportCountOutputTypeCountOpenGamesArgs<ExtArgs extends runtime.Types
 export type SportSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   key?: boolean
-  icon?: boolean
   hourlyPrice?: boolean
   priceMin?: boolean
   priceMax?: boolean
@@ -918,7 +879,6 @@ export type SportSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
 export type SportSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   key?: boolean
-  icon?: boolean
   hourlyPrice?: boolean
   priceMin?: boolean
   priceMax?: boolean
@@ -929,7 +889,6 @@ export type SportSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 export type SportSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   key?: boolean
-  icon?: boolean
   hourlyPrice?: boolean
   priceMin?: boolean
   priceMax?: boolean
@@ -940,7 +899,6 @@ export type SportSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 export type SportSelectScalar = {
   id?: boolean
   key?: boolean
-  icon?: boolean
   hourlyPrice?: boolean
   priceMin?: boolean
   priceMax?: boolean
@@ -948,7 +906,7 @@ export type SportSelectScalar = {
   equipmentOptions?: boolean
 }
 
-export type SportOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "icon" | "hourlyPrice" | "priceMin" | "priceMax" | "durationMinutes" | "equipmentOptions", ExtArgs["result"]["sport"]>
+export type SportOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "key" | "hourlyPrice" | "priceMin" | "priceMax" | "durationMinutes" | "equipmentOptions", ExtArgs["result"]["sport"]>
 export type SportInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   centerLinks?: boolean | Prisma.Sport$centerLinksArgs<ExtArgs>
   courts?: boolean | Prisma.Sport$courtsArgs<ExtArgs>
@@ -970,7 +928,6 @@ export type $SportPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     key: string
-    icon: string
     hourlyPrice: number
     priceMin: number
     priceMax: number
@@ -1405,7 +1362,6 @@ export interface Prisma__SportClient<T, Null = never, ExtArgs extends runtime.Ty
 export interface SportFieldRefs {
   readonly id: Prisma.FieldRef<"Sport", 'String'>
   readonly key: Prisma.FieldRef<"Sport", 'String'>
-  readonly icon: Prisma.FieldRef<"Sport", 'String'>
   readonly hourlyPrice: Prisma.FieldRef<"Sport", 'Float'>
   readonly priceMin: Prisma.FieldRef<"Sport", 'Float'>
   readonly priceMax: Prisma.FieldRef<"Sport", 'Float'>

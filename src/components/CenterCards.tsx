@@ -1,7 +1,7 @@
 import { useCatalogQuery } from "@/hooks/use-api-data";
 import { useLang } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Star } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { getLocalizedSportName } from "@/lib/sport-labels";
 
 export default function CenterCards() {
@@ -49,10 +49,6 @@ export default function CenterCards() {
                       <MapPin className="h-3.5 w-3.5" />
                       {center.location}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 rounded-lg bg-sport-yellow-light px-2 py-1 text-sm font-medium">
-                    <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                    {center.rating}
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">

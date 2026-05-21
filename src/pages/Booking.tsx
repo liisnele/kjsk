@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Folder,
   MapPin,
-  Star,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { Calendar } from "@/components/ui/calendar";
@@ -542,10 +541,6 @@ export default function BookingPage() {
                       <p className="mt-2 text-sm text-muted-foreground">
                         {center.description[centerDescriptionLang]}
                       </p>
-                      <div className="mt-3 flex items-center gap-1 text-sm font-medium">
-                        <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                        {center.rating}
-                      </div>
                     </button>
                   ))}
                 </div>

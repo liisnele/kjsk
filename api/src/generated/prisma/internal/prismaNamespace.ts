@@ -1120,7 +1120,6 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const SportScalarFieldEnum = {
   id: 'id',
   key: 'key',
-  icon: 'icon',
   hourlyPrice: 'hourlyPrice',
   priceMin: 'priceMin',
   priceMax: 'priceMax',
@@ -1145,7 +1144,6 @@ export const SportCenterScalarFieldEnum = {
   location: 'location',
   descriptionEt: 'descriptionEt',
   descriptionEn: 'descriptionEn',
-  rating: 'rating',
   image: 'image',
   openingHour: 'openingHour',
   closingHour: 'closingHour'

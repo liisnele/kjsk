@@ -21,7 +21,6 @@ enum SkillLevel {
 model Sport {
   id               String        @id
   key              String
-  icon             String
   hourlyPrice      Float
   priceMin         Float         @default(0)
   priceMax         Float         @default(0)
@@ -44,7 +43,6 @@ model SportCenter {
   location      String
   descriptionEt String
   descriptionEn String
-  rating        Float
   image         String
   openingHour   Int
   closingHour   Int

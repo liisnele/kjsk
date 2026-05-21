@@ -29,7 +29,6 @@ type OpenGameWithRelations = OpenGame & {
 export const serializeSport = (sport: SportWithCenterLinks) => ({
   id: sport.id,
   key: sport.key,
-  icon: sport.icon,
   hourlyPrice: sport.hourlyPrice,
   priceMin: sport.priceMin,
   priceMax: sport.priceMax,
@@ -52,7 +51,6 @@ export const serializeCenter = (center: CenterWithRelations) => ({
     en: center.descriptionEn,
   },
   sportIds: center.sports.map((sport) => sport.sportId),
-  rating: center.rating,
   image: center.image,
   courts: center.courts,
   openingHours: {

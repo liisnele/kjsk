@@ -1,7 +1,6 @@
 export interface Sport {
   id: string;
   key: string;
-  icon: string;
   centerIds: string[];
   equipmentOptions: string[];
   hourlyPrice: number;
@@ -22,7 +21,6 @@ export interface SportCenter {
   location: string;
   description: { et: string; en: string };
   sportIds: string[];
-  rating: number;
   image: string;
   courts: Court[];
   openingHours: { open: number; close: number };

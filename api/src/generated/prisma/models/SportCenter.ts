@@ -27,13 +27,11 @@ export type AggregateSportCenter = {
 }
 
 export type SportCenterAvgAggregateOutputType = {
-  rating: number | null
   openingHour: number | null
   closingHour: number | null
 }
 
 export type SportCenterSumAggregateOutputType = {
-  rating: number | null
   openingHour: number | null
   closingHour: number | null
 }
@@ -44,7 +42,6 @@ export type SportCenterMinAggregateOutputType = {
   location: string | null
   descriptionEt: string | null
   descriptionEn: string | null
-  rating: number | null
   image: string | null
   openingHour: number | null
   closingHour: number | null
@@ -56,7 +53,6 @@ export type SportCenterMaxAggregateOutputType = {
   location: string | null
   descriptionEt: string | null
   descriptionEn: string | null
-  rating: number | null
   image: string | null
   openingHour: number | null
   closingHour: number | null
@@ -68,7 +64,6 @@ export type SportCenterCountAggregateOutputType = {
   location: number
   descriptionEt: number
   descriptionEn: number
-  rating: number
   image: number
   openingHour: number
   closingHour: number
@@ -77,13 +72,11 @@ export type SportCenterCountAggregateOutputType = {
 
 
 export type SportCenterAvgAggregateInputType = {
-  rating?: true
   openingHour?: true
   closingHour?: true
 }
 
 export type SportCenterSumAggregateInputType = {
-  rating?: true
   openingHour?: true
   closingHour?: true
 }
@@ -94,7 +87,6 @@ export type SportCenterMinAggregateInputType = {
   location?: true
   descriptionEt?: true
   descriptionEn?: true
-  rating?: true
   image?: true
   openingHour?: true
   closingHour?: true
@@ -106,7 +98,6 @@ export type SportCenterMaxAggregateInputType = {
   location?: true
   descriptionEt?: true
   descriptionEn?: true
-  rating?: true
   image?: true
   openingHour?: true
   closingHour?: true
@@ -118,7 +109,6 @@ export type SportCenterCountAggregateInputType = {
   location?: true
   descriptionEt?: true
   descriptionEn?: true
-  rating?: true
   image?: true
   openingHour?: true
   closingHour?: true
@@ -217,7 +207,6 @@ export type SportCenterGroupByOutputType = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -252,7 +241,6 @@ export type SportCenterWhereInput = {
   location?: Prisma.StringFilter<"SportCenter"> | string
   descriptionEt?: Prisma.StringFilter<"SportCenter"> | string
   descriptionEn?: Prisma.StringFilter<"SportCenter"> | string
-  rating?: Prisma.FloatFilter<"SportCenter"> | number
   image?: Prisma.StringFilter<"SportCenter"> | string
   openingHour?: Prisma.IntFilter<"SportCenter"> | number
   closingHour?: Prisma.IntFilter<"SportCenter"> | number
@@ -268,7 +256,6 @@ export type SportCenterOrderByWithRelationInput = {
   location?: Prisma.SortOrder
   descriptionEt?: Prisma.SortOrder
   descriptionEn?: Prisma.SortOrder
-  rating?: Prisma.SortOrder
   image?: Prisma.SortOrder
   openingHour?: Prisma.SortOrder
   closingHour?: Prisma.SortOrder
@@ -287,7 +274,6 @@ export type SportCenterWhereUniqueInput = Prisma.AtLeast<{
   location?: Prisma.StringFilter<"SportCenter"> | string
   descriptionEt?: Prisma.StringFilter<"SportCenter"> | string
   descriptionEn?: Prisma.StringFilter<"SportCenter"> | string
-  rating?: Prisma.FloatFilter<"SportCenter"> | number
   image?: Prisma.StringFilter<"SportCenter"> | string
   openingHour?: Prisma.IntFilter<"SportCenter"> | number
   closingHour?: Prisma.IntFilter<"SportCenter"> | number
@@ -303,7 +289,6 @@ export type SportCenterOrderByWithAggregationInput = {
   location?: Prisma.SortOrder
   descriptionEt?: Prisma.SortOrder
   descriptionEn?: Prisma.SortOrder
-  rating?: Prisma.SortOrder
   image?: Prisma.SortOrder
   openingHour?: Prisma.SortOrder
   closingHour?: Prisma.SortOrder
@@ -323,7 +308,6 @@ export type SportCenterScalarWhereWithAggregatesInput = {
   location?: Prisma.StringWithAggregatesFilter<"SportCenter"> | string
   descriptionEt?: Prisma.StringWithAggregatesFilter<"SportCenter"> | string
   descriptionEn?: Prisma.StringWithAggregatesFilter<"SportCenter"> | string
-  rating?: Prisma.FloatWithAggregatesFilter<"SportCenter"> | number
   image?: Prisma.StringWithAggregatesFilter<"SportCenter"> | string
   openingHour?: Prisma.IntWithAggregatesFilter<"SportCenter"> | number
   closingHour?: Prisma.IntWithAggregatesFilter<"SportCenter"> | number
@@ -335,7 +319,6 @@ export type SportCenterCreateInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -351,7 +334,6 @@ export type SportCenterUncheckedCreateInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -367,7 +349,6 @@ export type SportCenterUpdateInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -383,7 +364,6 @@ export type SportCenterUncheckedUpdateInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -399,7 +379,6 @@ export type SportCenterCreateManyInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -411,7 +390,6 @@ export type SportCenterUpdateManyMutationInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -423,7 +401,6 @@ export type SportCenterUncheckedUpdateManyInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -435,14 +412,12 @@ export type SportCenterCountOrderByAggregateInput = {
   location?: Prisma.SortOrder
   descriptionEt?: Prisma.SortOrder
   descriptionEn?: Prisma.SortOrder
-  rating?: Prisma.SortOrder
   image?: Prisma.SortOrder
   openingHour?: Prisma.SortOrder
   closingHour?: Prisma.SortOrder
 }
 
 export type SportCenterAvgOrderByAggregateInput = {
-  rating?: Prisma.SortOrder
   openingHour?: Prisma.SortOrder
   closingHour?: Prisma.SortOrder
 }
@@ -453,7 +428,6 @@ export type SportCenterMaxOrderByAggregateInput = {
   location?: Prisma.SortOrder
   descriptionEt?: Prisma.SortOrder
   descriptionEn?: Prisma.SortOrder
-  rating?: Prisma.SortOrder
   image?: Prisma.SortOrder
   openingHour?: Prisma.SortOrder
   closingHour?: Prisma.SortOrder
@@ -465,14 +439,12 @@ export type SportCenterMinOrderByAggregateInput = {
   location?: Prisma.SortOrder
   descriptionEt?: Prisma.SortOrder
   descriptionEn?: Prisma.SortOrder
-  rating?: Prisma.SortOrder
   image?: Prisma.SortOrder
   openingHour?: Prisma.SortOrder
   closingHour?: Prisma.SortOrder
 }
 
 export type SportCenterSumOrderByAggregateInput = {
-  rating?: Prisma.SortOrder
   openingHour?: Prisma.SortOrder
   closingHour?: Prisma.SortOrder
 }
@@ -544,7 +516,6 @@ export type SportCenterCreateWithoutSportsInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -559,7 +530,6 @@ export type SportCenterUncheckedCreateWithoutSportsInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -590,7 +560,6 @@ export type SportCenterUpdateWithoutSportsInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -605,7 +574,6 @@ export type SportCenterUncheckedUpdateWithoutSportsInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -620,7 +588,6 @@ export type SportCenterCreateWithoutCourtsInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -635,7 +602,6 @@ export type SportCenterUncheckedCreateWithoutCourtsInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -666,7 +632,6 @@ export type SportCenterUpdateWithoutCourtsInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -681,7 +646,6 @@ export type SportCenterUncheckedUpdateWithoutCourtsInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -696,7 +660,6 @@ export type SportCenterCreateWithoutBookingsInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -711,7 +674,6 @@ export type SportCenterUncheckedCreateWithoutBookingsInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -742,7 +704,6 @@ export type SportCenterUpdateWithoutBookingsInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -757,7 +718,6 @@ export type SportCenterUncheckedUpdateWithoutBookingsInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -772,7 +732,6 @@ export type SportCenterCreateWithoutOpenGamesInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -787,7 +746,6 @@ export type SportCenterUncheckedCreateWithoutOpenGamesInput = {
   location: string
   descriptionEt: string
   descriptionEn: string
-  rating: number
   image: string
   openingHour: number
   closingHour: number
@@ -818,7 +776,6 @@ export type SportCenterUpdateWithoutOpenGamesInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -833,7 +790,6 @@ export type SportCenterUncheckedUpdateWithoutOpenGamesInput = {
   location?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
   descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
-  rating?: Prisma.FloatFieldUpdateOperationsInput | number
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
@@ -906,7 +862,6 @@ export type SportCenterSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   location?: boolean
   descriptionEt?: boolean
   descriptionEn?: boolean
-  rating?: boolean
   image?: boolean
   openingHour?: boolean
   closingHour?: boolean
@@ -923,7 +878,6 @@ export type SportCenterSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   location?: boolean
   descriptionEt?: boolean
   descriptionEn?: boolean
-  rating?: boolean
   image?: boolean
   openingHour?: boolean
   closingHour?: boolean
@@ -935,7 +889,6 @@ export type SportCenterSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   location?: boolean
   descriptionEt?: boolean
   descriptionEn?: boolean
-  rating?: boolean
   image?: boolean
   openingHour?: boolean
   closingHour?: boolean
@@ -947,13 +900,12 @@ export type SportCenterSelectScalar = {
   location?: boolean
   descriptionEt?: boolean
   descriptionEn?: boolean
-  rating?: boolean
   image?: boolean
   openingHour?: boolean
   closingHour?: boolean
 }
 
-export type SportCenterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "descriptionEt" | "descriptionEn" | "rating" | "image" | "openingHour" | "closingHour", ExtArgs["result"]["sportCenter"]>
+export type SportCenterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "descriptionEt" | "descriptionEn" | "image" | "openingHour" | "closingHour", ExtArgs["result"]["sportCenter"]>
 export type SportCenterInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sports?: boolean | Prisma.SportCenter$sportsArgs<ExtArgs>
   courts?: boolean | Prisma.SportCenter$courtsArgs<ExtArgs>
@@ -978,7 +930,6 @@ export type $SportCenterPayload<ExtArgs extends runtime.Types.Extensions.Interna
     location: string
     descriptionEt: string
     descriptionEn: string
-    rating: number
     image: string
     openingHour: number
     closingHour: number
@@ -1414,7 +1365,6 @@ export interface SportCenterFieldRefs {
   readonly location: Prisma.FieldRef<"SportCenter", 'String'>
   readonly descriptionEt: Prisma.FieldRef<"SportCenter", 'String'>
   readonly descriptionEn: Prisma.FieldRef<"SportCenter", 'String'>
-  readonly rating: Prisma.FieldRef<"SportCenter", 'Float'>
   readonly image: Prisma.FieldRef<"SportCenter", 'String'>
   readonly openingHour: Prisma.FieldRef<"SportCenter", 'Int'>
   readonly closingHour: Prisma.FieldRef<"SportCenter", 'Int'>

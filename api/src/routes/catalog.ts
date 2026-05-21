@@ -9,7 +9,21 @@ import { Hono } from "hono";
 export const catalog = new Hono();
 
 const DEMO_CENTER_ID = "ahtme";
-const HIDDEN_DEMO_SPORT_IDS = ["ahtme-changing-room"];
+const HIDDEN_DEMO_SPORT_IDS = [
+  "ahtme-changing-room",
+  "ahtme-unregistered-event-hall",
+  "ahtme-unregistered-event-territory",
+  "ahtme-unregistered-prep-time",
+  "ahtme-registered-event-hall",
+  "ahtme-registered-event-territory",
+  "ahtme-supported-prep-time",
+  "ahtme-city-event-free",
+  "ahtme-registered-training-full",
+  "ahtme-registered-training-half",
+  "ahtme-registered-training-quarter",
+  "ahtme-registered-training-aerobics",
+  "ahtme-registered-training-gym",
+];
 
 catalog.get("/", async (c) => {
   const [sports, centers, equipment] = await Promise.all([

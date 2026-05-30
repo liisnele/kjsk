@@ -95,9 +95,7 @@ const clubAndSchoolServiceIds = new Set([
   "ahtme-club-training-quarter",
   "ahtme-club-training-aerobics",
   "ahtme-club-training-gym",
-  "ahtme-school-pe-free",
   "ahtme-supported-club-training",
-  "ahtme-state-school-pe",
 ]);
 
 const serviceMetadata: Record<

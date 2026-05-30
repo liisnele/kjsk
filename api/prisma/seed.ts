@@ -117,12 +117,10 @@ const ahtmeServices = [
   { id: "ahtme-club-training-quarter", key: "Kergejõustikuareen 1/4", hourlyPrice: 8, priceMin: 6, priceMax: 10 },
   { id: "ahtme-club-training-aerobics", key: "Aeroobikasaal", hourlyPrice: 12, priceMin: 9, priceMax: 14 },
   { id: "ahtme-club-training-gym", key: "Jõusaal", hourlyPrice: 10, priceMin: 7, priceMax: 12 },
-  { id: "ahtme-school-pe-free", key: "Koolide liikumisõpe, treeningud ja üritused", hourlyPrice: 0 },
   { id: "ahtme-tennis-court", key: "Tennis", hourlyPrice: 10, priceMin: 5, priceMax: 10 },
   { id: "ahtme-volleyball-court", key: "Võrkpall", hourlyPrice: 10, priceMin: 5, priceMax: 10 },
   { id: "ahtme-badminton-court", key: "Sulgpall", hourlyPrice: 10, priceMin: 5, priceMax: 10 },
   { id: "ahtme-supported-club-training", key: "Toetatavate spordiklubide ja Jõhvi Spordikooli treeningud", hourlyPrice: 10 },
-  { id: "ahtme-state-school-pe", key: "HTM hallatavate koolide kehaline kasvatus ja üritused", hourlyPrice: 15, priceMin: 10, priceMax: 15 },
   { id: "ahtme-table-tennis", key: "Lauatennis", hourlyPrice: 4, priceMin: 2, priceMax: 4 },
   { id: "ahtme-private-running-track", key: "Jooksurada", hourlyPrice: 10, priceMin: 6, priceMax: 10 },
   { id: "ahtme-sauna-small", key: "Saun", hourlyPrice: 10 },
@@ -200,9 +198,7 @@ const clubAndSchoolServiceIds = new Set([
   "ahtme-club-training-quarter",
   "ahtme-club-training-aerobics",
   "ahtme-club-training-gym",
-  "ahtme-school-pe-free",
   "ahtme-supported-club-training",
-  "ahtme-state-school-pe",
 ]);
 
 const serviceMetadata: Record<

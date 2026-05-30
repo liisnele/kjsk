@@ -64,14 +64,6 @@ export const pricingRules = [
     ...daytimeWindow,
   },
   {
-    id: "ahtme-state-school-pe-weekday",
-    serviceId: "ahtme-state-school-pe",
-    price: 10,
-    priority: 10,
-    months: [],
-    weekdays,
-  },
-  {
     id: "ahtme-private-running-track-daytime",
     serviceId: "ahtme-private-running-track",
     price: 6,

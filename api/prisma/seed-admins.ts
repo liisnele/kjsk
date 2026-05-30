@@ -2,6 +2,8 @@ import "dotenv/config";
 
 import { auth } from "../src/lib/auth.js";
 import { prisma } from "../src/lib/prisma.js";
+import { randomUUID } from "node:crypto";
+import { hashPassword } from "better-auth/crypto";
 
 const getAdminUsersFromEnv = () => {
   if (!process.env.ADMIN_USERS_JSON) {
@@ -37,13 +39,13 @@ async function main() {
   const adminUsers = getAdminUsersFromEnv();
 
   for (const adminUser of adminUsers) {
-    const existingUser = await prisma.user.findFirst({
+    let user = await prisma.user.findFirst({
       where: {
         OR: [{ username: adminUser.username }, { email: adminUser.email }],
       },
     });
 
-    if (!existingUser) {
+    if (!user) {
       await auth.api.signUpEmail({
         body: {
           email: adminUser.email,
@@ -52,6 +54,41 @@ async function main() {
           username: adminUser.username,
         },
       });
+
+      user = await prisma.user.findUniqueOrThrow({
+        where: {
+          email: adminUser.email,
+        },
+      });
+    } else {
+      const passwordHash = await hashPassword(adminUser.password);
+      const credentialAccount = await prisma.account.findFirst({
+        where: {
+          userId: user.id,
+          providerId: "credential",
+        },
+      });
+
+      if (credentialAccount) {
+        await prisma.account.update({
+          where: {
+            id: credentialAccount.id,
+          },
+          data: {
+            password: passwordHash,
+          },
+        });
+      } else {
+        await prisma.account.create({
+          data: {
+            id: randomUUID(),
+            userId: user.id,
+            providerId: "credential",
+            accountId: user.id,
+            password: passwordHash,
+          },
+        });
+      }
     }
 
     await prisma.user.update({

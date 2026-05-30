@@ -1,6 +1,8 @@
 ﻿import "dotenv/config";
 
 import { auth } from "../src/lib/auth.js";
+import { randomUUID } from "node:crypto";
+import { hashPassword } from "better-auth/crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client.js";
 import { pricingRules, serializePricingRuleSeed } from "./pricing-rules.js";
@@ -38,6 +40,73 @@ const getAdminUsersFromEnv = () => {
       password: user.password,
       role: user.role ?? "admin",
     };
+  });
+};
+
+const upsertAdminUser = async (adminUser: ReturnType<typeof getAdminUsersFromEnv>[number]) => {
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [{ username: adminUser.username }, { email: adminUser.email }],
+    },
+  });
+
+  if (!user) {
+    await auth.api.signUpEmail({
+      body: {
+        email: adminUser.email,
+        password: adminUser.password,
+        name: adminUser.username,
+        username: adminUser.username,
+      },
+    });
+
+    user = await prisma.user.findUniqueOrThrow({
+      where: {
+        email: adminUser.email,
+      },
+    });
+  } else {
+    const passwordHash = await hashPassword(adminUser.password);
+    const credentialAccount = await prisma.account.findFirst({
+      where: {
+        userId: user.id,
+        providerId: "credential",
+      },
+    });
+
+    if (credentialAccount) {
+      await prisma.account.update({
+        where: {
+          id: credentialAccount.id,
+        },
+        data: {
+          password: passwordHash,
+        },
+      });
+    } else {
+      await prisma.account.create({
+        data: {
+          id: randomUUID(),
+          userId: user.id,
+          providerId: "credential",
+          accountId: user.id,
+          password: passwordHash,
+        },
+      });
+    }
+  }
+
+  await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      email: adminUser.email,
+      username: adminUser.username,
+      displayUsername: adminUser.username,
+      role: adminUser.role,
+      active: true,
+    },
   });
 };
 
@@ -373,24 +442,7 @@ async function main() {
   });
 
   for (const adminUser of adminUsers) {
-    await auth.api.signUpEmail({
-      body: {
-        email: adminUser.email,
-        password: adminUser.password,
-        name: adminUser.username,
-        username: adminUser.username,
-      },
-    });
-
-    await prisma.user.update({
-      where: {
-        email: adminUser.email,
-      },
-      data: {
-        role: adminUser.role,
-        active: true,
-      },
-    });
+    await upsertAdminUser(adminUser);
   }
 }
 

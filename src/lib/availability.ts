@@ -1,4 +1,4 @@
-import type { Booking, SportCenter, TimeSlot } from "@/types/api";
+import type { Booking, Sport, SportCenter, TimeSlot } from "@/types/api";
 
 const individualArenaSportIds = new Set([
   "ahtme-single-ticket",
@@ -15,7 +15,7 @@ const arenaClubTrainingSportIds = new Set([
 ]);
 
 const arenaCapacityBySportId: Record<string, number> = {
-  "ahtme-single-ticket": 0.5,
+  "ahtme-single-ticket": 0.25,
   "ahtme-club-training-full": 1,
   "ahtme-club-training-half": 0.5,
   "ahtme-club-training-quarter": 0.25,
@@ -26,31 +26,6 @@ const fullArenaSportIds = new Set([
   "ahtme-club-training-full",
   "ahtme-supported-club-training",
 ]);
-
-const packageComponentSportIds: Record<string, string[]> = {
-  "ahtme-package-arena-gym-tennis-sauna": [
-    "ahtme-single-ticket",
-    "ahtme-tennis-court",
-    "ahtme-sauna-small",
-  ],
-  "ahtme-package-volleyball-sauna": [
-    "ahtme-volleyball-court",
-    "ahtme-sauna-small",
-  ],
-  "ahtme-package-gym-tabletennis-sauna": [
-    "ahtme-single-ticket",
-    "ahtme-table-tennis",
-    "ahtme-sauna-small",
-  ],
-  "ahtme-family-package": [
-    "ahtme-single-ticket",
-    "ahtme-table-tennis",
-    "ahtme-tennis-court",
-  ],
-};
-
-const getPackageComponentSportIds = (sportId: string) =>
-  packageComponentSportIds[sportId] ?? [];
 
 const getCourtsForSportIds = (center: SportCenter, sportIds: string[]) =>
   sportIds
@@ -171,22 +146,26 @@ export function generateTimeSlots(
   centers: SportCenter[],
   bookings: Booking[] = [],
   durationMinutes = 60,
+  bookingOptions: Sport[] = [],
 ): TimeSlot[] {
   const center = centers.find((item) => item.id === centerId);
   if (!center) {
     return [];
   }
 
-  const relevantCourts = center.courts.filter((court) => court.sportId === sportId);
+  const componentSportIds =
+    bookingOptions.find((option) => option.id === sportId)?.componentSportIds ?? [];
+  const primarySportId = componentSportIds[0] ?? sportId;
+  const relevantCourts = center.courts.filter((court) => court.sportId === primarySportId);
   if (relevantCourts.length === 0) {
     return [];
   }
   const packageComponentCourts = getCourtsForSportIds(
     center,
-    getPackageComponentSportIds(sportId),
+    componentSportIds.slice(1),
   );
   const packageHasAllComponentCourts =
-    getPackageComponentSportIds(sportId).length === packageComponentCourts.length;
+    componentSportIds.slice(1).length === packageComponentCourts.length;
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
@@ -223,7 +202,7 @@ export function generateTimeSlots(
 
   const isTimeBooked = (courtId: string, time: string, duration = durationMinutes) =>
     isArenaCapacityUnavailable(
-      sportId,
+      primarySportId,
       bookings.filter((booking) => booking.centerId === centerId),
       date,
       time,
@@ -232,8 +211,8 @@ export function generateTimeSlots(
     bookings.some((booking) => {
       if (
         booking.centerId !== centerId ||
-        (getArenaCapacity(sportId) > 0 && getArenaCapacity(booking.sportId) > 0) ||
-        !shouldBookingBlockSlot(sportId, courtId, booking)
+        (getArenaCapacity(primarySportId) > 0 && getArenaCapacity(booking.sportId) > 0) ||
+        !shouldBookingBlockSlot(primarySportId, courtId, booking)
       ) {
         return false;
       }
@@ -278,7 +257,7 @@ export function generateTimeSlots(
 
     for (const court of relevantCourts) {
       const isBooked =
-        packageComponentCourts.length > 0
+        componentSportIds.length > 0
           ? isPackageTimeBooked(court.id, fullHourTime)
           : isTimeBooked(court.id, fullHourTime);
       let available =
@@ -302,7 +281,7 @@ export function generateTimeSlots(
 
     for (const court of relevantCourts) {
       const isBooked =
-        packageComponentCourts.length > 0
+        componentSportIds.length > 0
           ? isPackageTimeBooked(court.id, halfHourTime)
           : isTimeBooked(court.id, halfHourTime);
       let available =

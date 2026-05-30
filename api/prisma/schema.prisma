@@ -18,6 +18,11 @@ enum SkillLevel {
   professional
 }
 
+enum AdminRole {
+  admin
+  senior_admin
+}
+
 model Sport {
   id               String        @id
   key              String
@@ -25,16 +30,57 @@ model Sport {
   priceMin         Float         @default(0)
   priceMax         Float         @default(0)
   durationMinutes  Int           @default(60)
+  category         String        @default("individual")
+  participantMax   Int           @default(50)
+  note             String?
   equipmentOptions String[]
   centerLinks      CenterSport[]
   courts           Court[]
   bookings         Booking[]
   openGames        OpenGame[]
+  optionComponents BookingOptionComponent[]
+}
+
+model BookingOption {
+  id              String                   @id
+  key             String
+  centerId        String
+  hourlyPrice     Float
+  priceMin        Float                    @default(0)
+  priceMax        Float                    @default(0)
+  durationMinutes Int                      @default(60)
+  category        String                   @default("individual")
+  participantMax  Int                      @default(50)
+  note            String?
+  center          SportCenter              @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  components      BookingOptionComponent[]
+}
+
+model BookingOptionComponent {
+  optionId String
+  sportId  String
+  position Int           @default(0)
+  option   BookingOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  sport    Sport         @relation(fields: [sportId], references: [id], onDelete: Cascade)
+
+  @@id([optionId, sportId])
 }
 
 model EquipmentItem {
   id    String @id
   price Float
+}
+
+model PricingRule {
+  id               String  @id
+  serviceId        String
+  price            Float
+  priority         Int     @default(0)
+  months           Int[]   @default([])
+  weekdays         Int[]   @default([])
+  startMinute      Int?
+  endMinute        Int?
+  organizationType String?
 }
 
 model SportCenter {
@@ -47,6 +93,7 @@ model SportCenter {
   openingHour   Int
   closingHour   Int
   sports        CenterSport[]
+  bookingOptions BookingOption[]
   courts        Court[]
   bookings      Booking[]
   openGames     OpenGame[]
@@ -75,6 +122,9 @@ model Court {
 model Booking {
   id           String        @id
   sportId      String
+  bookingGroupId String?
+  bookingOptionId String?
+  bookingOptionName String?
   centerId     String
   courtId      String?
   date         String
@@ -91,6 +141,65 @@ model Booking {
   sport        Sport         @relation(fields: [sportId], references: [id], onDelete: Restrict)
   center       SportCenter   @relation(fields: [centerId], references: [id], onDelete: Restrict)
   court        Court?        @relation(fields: [courtId], references: [id], onDelete: SetNull)
+}
+
+model User {
+  id              String     @id
+  name            String
+  email           String     @unique
+  emailVerified   Boolean    @default(false)
+  image           String?
+  username        String?    @unique
+  displayUsername String?
+  role            AdminRole  @default(admin)
+  active          Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  sessions        Session[]
+  accounts        Account[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model OpenGame {

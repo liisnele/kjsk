@@ -25,7 +25,6 @@ import {
   getSportPriceForDateTime,
   getSportPriceRange,
 } from "@/lib/pricing";
-import { getLocalizedSportName } from "@/lib/sport-labels";
 import { cn } from "@/lib/utils";
 
 type ServiceCategoryId =
@@ -39,52 +38,6 @@ const serviceCategoryIds: ServiceCategoryId[] = [
   "clubsAndSchools",
 ];
 
-const serviceCategoryBySportId: Record<string, ServiceCategoryId> = {
-  "ahtme-single-ticket": "individual",
-  "ahtme-tennis-court": "individual",
-  "ahtme-volleyball-court": "individual",
-  "ahtme-badminton-court": "individual",
-  "ahtme-table-tennis": "individual",
-  "ahtme-private-running-track": "individual",
-  "ahtme-package-arena-gym-tennis-sauna": "packages",
-  "ahtme-package-volleyball-sauna": "packages",
-  "ahtme-package-gym-tabletennis-sauna": "packages",
-  "ahtme-family-package": "packages",
-  "ahtme-sauna-small": "individual",
-  "ahtme-sauna-gym": "individual",
-  "ahtme-school-pe-free": "clubsAndSchools",
-  "ahtme-state-school-pe": "clubsAndSchools",
-  "ahtme-club-training-full": "clubsAndSchools",
-  "ahtme-club-training-half": "clubsAndSchools",
-  "ahtme-club-training-quarter": "clubsAndSchools",
-  "ahtme-club-training-aerobics": "clubsAndSchools",
-  "ahtme-club-training-gym": "clubsAndSchools",
-  "ahtme-registered-training-full": "clubsAndSchools",
-  "ahtme-registered-training-half": "clubsAndSchools",
-  "ahtme-registered-training-quarter": "clubsAndSchools",
-  "ahtme-registered-training-aerobics": "clubsAndSchools",
-  "ahtme-registered-training-gym": "clubsAndSchools",
-  "ahtme-supported-club-training": "clubsAndSchools",
-};
-
-const getServiceCategory = (sportId: string): ServiceCategoryId =>
-  serviceCategoryBySportId[sportId] ?? "individual";
-
-const hiddenSportIds = new Set([
-  "ahtme-unregistered-event-hall",
-  "ahtme-unregistered-event-territory",
-  "ahtme-unregistered-prep-time",
-  "ahtme-registered-event-hall",
-  "ahtme-registered-event-territory",
-  "ahtme-supported-prep-time",
-  "ahtme-city-event-free",
-  "ahtme-registered-training-full",
-  "ahtme-registered-training-half",
-  "ahtme-registered-training-quarter",
-  "ahtme-registered-training-aerobics",
-  "ahtme-registered-training-gym",
-]);
-
 const arenaOrganizationSportIds = new Set([
   "ahtme-club-training-full",
   "ahtme-club-training-half",
@@ -92,29 +45,6 @@ const arenaOrganizationSportIds = new Set([
   "ahtme-club-training-aerobics",
   "ahtme-club-training-gym",
 ]);
-
-const serviceNotes: Record<string, Record<"et" | "en" | "ru", string>> = {
-  "ahtme-table-tennis": {
-    et: "Sisaldab reketite ja pallide laenutust",
-    en: "Includes racket and ball rental",
-    ru: "Включает прокат ракеток и мячей",
-  },
-  "ahtme-sauna-small": {
-    et: "Maksimaalselt 5 inimest",
-    en: "Maximum 5 people",
-    ru: "Максимум 5 человек",
-  },
-  "ahtme-sauna-gym": {
-    et: "Maksimaalselt 10 inimest",
-    en: "Maximum 10 people",
-    ru: "Максимум 10 человек",
-  },
-  "ahtme-family-package": {
-    et: "2 täiskasvanut ja kuni 3 last",
-    en: "2 adults and up to 3 children",
-    ru: "2 взрослых и до 3 детей",
-  },
-};
 
 export default function BookingPage() {
   const { lang, t } = useLang();
@@ -125,8 +55,10 @@ export default function BookingPage() {
   const createBookingMutation = useCreateBookingMutation();
 
   const sports = catalog?.sports ?? [];
+  const bookingOptions = catalog?.bookingOptions ?? [];
+  const services = useMemo(() => [...sports, ...bookingOptions], [bookingOptions, sports]);
   const sportCenters = catalog?.sportCenters ?? [];
-  const sportPrices = catalog?.sportPrices ?? {};
+  const pricingRules = catalog?.pricingRules ?? [];
   const equipmentPrices = catalog?.equipmentPrices ?? {};
 
   const initialSport = searchParams.get("sport") || "";
@@ -169,18 +101,20 @@ export default function BookingPage() {
 
   const availableCenters = useMemo(() => {
     if (!selectedSport) return sportCenters;
-    return sportCenters.filter((center) => center.sportIds.includes(selectedSport));
+    return sportCenters.filter((center) =>
+      [...center.sportIds, ...center.bookingOptionIds].includes(selectedSport),
+    );
   }, [selectedSport, sportCenters]);
 
   const availableSports = useMemo(() => {
-    const visibleSports = sports.filter((sport) => !hiddenSportIds.has(sport.id));
-
-    if (!selectedCenter) return visibleSports;
+    if (!selectedCenter) return services;
     const center = sportCenters.find((item) => item.id === selectedCenter);
     return center
-      ? visibleSports.filter((sport) => center.sportIds.includes(sport.id))
-      : visibleSports;
-  }, [selectedCenter, sportCenters, sports]);
+      ? services.filter((sport) =>
+          [...center.sportIds, ...center.bookingOptionIds].includes(sport.id),
+        )
+      : services;
+  }, [selectedCenter, services, sportCenters]);
 
   const groupedAvailableSports = useMemo(
     () =>
@@ -188,24 +122,19 @@ export default function BookingPage() {
         .map((id) => ({
           id,
           sports: availableSports.filter(
-            (sport) => getServiceCategory(sport.id) === id,
+            (sport) => (sport.category ?? "individual") === id,
           ),
         }))
         .filter((group) => group.sports.length > 0),
     [availableSports],
   );
 
-  const selectedSportData = sports.find((sport) => sport.id === selectedSport);
+  const selectedSportData = services.find((sport) => sport.id === selectedSport);
   const selectedDurationMinutes = selectedSportData?.durationMinutes ?? 60;
-  const isSingleTicket = selectedSportData?.id === "ahtme-single-ticket";
+  const isSingleTicket = selectedSportData?.id === "ahtme-single-ticket-gym";
   const isArenaOrganizationBooking =
     !!selectedSportData && arenaOrganizationSportIds.has(selectedSportData.id);
-  const participantLimit =
-    selectedSportData?.id === "ahtme-sauna-small"
-      ? 5
-      : selectedSportData?.id === "ahtme-sauna-gym"
-        ? 10
-        : 50;
+  const participantLimit = selectedSportData?.participantMax ?? 50;
   const ticketText = {
     et: {
       type: "Pileti tüüp",
@@ -305,12 +234,15 @@ export default function BookingPage() {
       sportCenters,
       bookings,
       selectedDurationMinutes,
+      bookingOptions,
     );
-  }, [bookings, dateStr, selectedCenter, selectedDurationMinutes, selectedSport, sportCenters]);
+  }, [bookingOptions, bookings, dateStr, selectedCenter, selectedDurationMinutes, selectedSport, sportCenters]);
 
   const selectedCenterData = sportCenters.find((center) => center.id === selectedCenter);
+  const selectedComponentSportIds = selectedSportData?.componentSportIds ?? [];
+  const primarySelectedSport = selectedComponentSportIds[0] ?? selectedSport;
   const courtsForSport =
-    selectedCenterData?.courts.filter((court) => court.sportId === selectedSport) ?? [];
+    selectedCenterData?.courts.filter((court) => court.sportId === primarySelectedSport) ?? [];
 
   const effectiveCourtId = selectedCourt || courtsForSport[0]?.id || "";
 
@@ -323,7 +255,11 @@ export default function BookingPage() {
     [equipmentPrices, form.equipment],
   );
   const singleTicketParticipants = form.adultTickets + form.discountTickets;
-  const singleTicketTotal = form.adultTickets * 6 + form.discountTickets * 4;
+  const singleTicketAdultPrice = selectedSportData?.priceMax || selectedSportData?.hourlyPrice || 0;
+  const singleTicketDiscountPrice = selectedSportData?.priceMin || singleTicketAdultPrice;
+  const singleTicketTotal =
+    form.adultTickets * singleTicketAdultPrice +
+    form.discountTickets * singleTicketDiscountPrice;
 
   const totalPrice = useMemo(
     () =>
@@ -334,9 +270,10 @@ export default function BookingPage() {
               selectedSportData,
               dateStr,
               selectedTime,
+              pricingRules,
               isArenaOrganizationBooking ? form.arenaOrganizationType : undefined,
             )
-          : sportPrices[selectedSport] || 0) + equipmentTotal,
+          : 0) + equipmentTotal,
     [
       dateStr,
       equipmentTotal,
@@ -347,27 +284,17 @@ export default function BookingPage() {
       selectedSport,
       selectedSportData,
       selectedTime,
-      sportPrices,
+      pricingRules,
     ],
   );
   const bookingRentalPrice = totalPrice - equipmentTotal;
   const formatBookingPrice = (price: number) => `${price} \u20ac`;
   const calendarLocale = lang === "ru" ? ru : lang === "en" ? enUS : et;
   const centerDescriptionLang = lang === "ru" ? "en" : lang;
-  const courtCountLabel = (count: number) => {
-    if (lang === "et") {
-      return count === 1 ? "väljak" : "väljakut";
-    }
-
-    if (lang === "ru") {
-      return count === 1 ? "площадка" : count > 1 && count < 5 ? "площадки" : "площадок";
-    }
-
-    return count === 1 ? "court" : "courts";
-  };
-  const getSportName = (sport: typeof sports[number]) =>
-    getLocalizedSportName(sport, lang, t.sportNames);
-  const getServiceNote = (sportId: string) => serviceNotes[sportId]?.[lang] ?? "";
+  const getSportName = (sport: typeof services[number]) => sport.key;
+  const serviceNotes = t.booking.serviceNotes as Record<string, string>;
+  const getServiceNote = (sport: typeof services[number]) =>
+    serviceNotes[sport.id] || sport.note || "";
   const emailValue = form.email.trim();
   const phoneValue = form.phone.trim();
   const participantValue =
@@ -521,7 +448,10 @@ export default function BookingPage() {
                       key={center.id}
                       onClick={() => {
                         setSelectedCenter(center.id);
-                        if (selectedSport && !center.sportIds.includes(selectedSport)) {
+                        if (
+                          selectedSport &&
+                          ![...center.sportIds, ...center.bookingOptionIds].includes(selectedSport)
+                        ) {
                           setSelectedSport("");
                         }
                         setSelectedCourt("");
@@ -563,13 +493,7 @@ export default function BookingPage() {
                         key={group.id}
                         className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5"
                       >
-                        {group.sports.map((sport) => {
-                          const courtsCount =
-                            selectedCenterData?.courts.filter(
-                              (court) => court.sportId === sport.id,
-                            ).length || 0;
-
-                          return (
+                        {group.sports.map((sport) => (
                             <button
                               key={sport.id}
                               onClick={() => {
@@ -589,17 +513,14 @@ export default function BookingPage() {
                               <span className="text-xs text-muted-foreground">
                                 {getSportPriceRange(sport, lang)} ·{" "}
                                 {getDurationLabel(sport.durationMinutes)}
-                                {" · "}
-                                {courtsCount} {courtCountLabel(courtsCount)}
                               </span>
-                              {getServiceNote(sport.id) && (
-                                <span className="text-center text-xs text-muted-foreground">
-                                  {getServiceNote(sport.id)}
-                                </span>
-                              )}
+                            {getServiceNote(sport) && (
+                              <span className="text-center text-xs text-muted-foreground">
+                                {getServiceNote(sport)}
+                              </span>
+                            )}
                             </button>
-                          );
-                        })}
+                        ))}
                       </div>
                     ) : (
                       <section
@@ -633,13 +554,7 @@ export default function BookingPage() {
 
                         {expandedServiceCategories[group.id] && (
                           <div className="grid grid-cols-2 gap-3 border-t border-border p-3 sm:grid-cols-3 md:grid-cols-5">
-                          {group.sports.map((sport) => {
-                            const courtsCount =
-                              selectedCenterData?.courts.filter(
-                                (court) => court.sportId === sport.id,
-                              ).length || 0;
-
-                            return (
+                          {group.sports.map((sport) => (
                               <button
                                 key={sport.id}
                                 onClick={() => {
@@ -659,17 +574,14 @@ export default function BookingPage() {
                                 <span className="text-xs text-muted-foreground">
                                   {getSportPriceRange(sport, lang)} ·{" "}
                                   {getDurationLabel(sport.durationMinutes)}
-                                  {" · "}
-                                  {courtsCount} {courtCountLabel(courtsCount)}
                                 </span>
-                                {getServiceNote(sport.id) && (
+                                {getServiceNote(sport) && (
                                   <span className="text-center text-xs text-muted-foreground">
-                                    {getServiceNote(sport.id)}
+                                    {getServiceNote(sport)}
                                   </span>
                                 )}
                               </button>
-                            );
-                          })}
+                          ))}
                           </div>
                         )}
                       </section>
@@ -869,6 +781,7 @@ export default function BookingPage() {
                           selectedSportData,
                           dateStr,
                           selectedTime,
+                          pricingRules,
                           option.id,
                         );
 

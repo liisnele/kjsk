@@ -1,4 +1,4 @@
-import { serializeBooking } from "@/lib/serializers.js";
+import { serializeAvailabilityBooking, serializeBooking } from "@/lib/serializers.js";
 import { prisma } from "@/lib/prisma.js";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -46,7 +46,7 @@ const arenaClubTrainingSportIds = new Set([
 ]);
 
 const arenaCapacityBySportId: Record<string, number> = {
-  "ahtme-single-ticket": 0.5,
+  "ahtme-single-ticket": 0.25,
   "ahtme-club-training-full": 1,
   "ahtme-club-training-half": 0.5,
   "ahtme-club-training-quarter": 0.25,
@@ -57,31 +57,6 @@ const fullArenaSportIds = new Set([
   "ahtme-club-training-full",
   "ahtme-supported-club-training",
 ]);
-const packageComponentSportIds: Record<string, string[]> = {
-  "ahtme-package-arena-gym-tennis-sauna": [
-    "ahtme-single-ticket",
-    "ahtme-tennis-court",
-    "ahtme-sauna-small",
-  ],
-  "ahtme-package-volleyball-sauna": [
-    "ahtme-volleyball-court",
-    "ahtme-sauna-small",
-  ],
-  "ahtme-package-gym-tabletennis-sauna": [
-    "ahtme-single-ticket",
-    "ahtme-table-tennis",
-    "ahtme-sauna-small",
-  ],
-  "ahtme-family-package": [
-    "ahtme-single-ticket",
-    "ahtme-table-tennis",
-    "ahtme-tennis-court",
-  ],
-};
-
-const getPackageComponentSportIds = (sportId: string) =>
-  packageComponentSportIds[sportId] ?? [];
-
 const shouldBookingBlockSlot = (
   requestedSportId: string,
   requestedCourtId: string,
@@ -182,7 +157,7 @@ bookings.get("/", async (c) => {
     orderBy: [{ date: "asc" }, { time: "asc" }, { createdAt: "asc" }],
   });
 
-  return c.json(items.map(serializeBooking));
+  return c.json(items.map(serializeAvailabilityBooking));
 });
 
 bookings.post("/", zValidator("json", bookingSchema), async (c) => {
@@ -196,8 +171,14 @@ bookings.post("/", zValidator("json", bookingSchema), async (c) => {
     return c.json({ message: "Selected booking option is not available." }, 400);
   }
 
-  const sport = await prisma.sport.findUnique({
+  const selectedOption = await prisma.bookingOption.findUnique({
     where: { id: payload.sportId },
+    include: { components: { orderBy: { position: "asc" } } },
+  });
+  const componentSportIds = selectedOption?.components.map((component) => component.sportId) ?? [];
+  const primarySportId = componentSportIds[0] ?? payload.sportId;
+  const sport = await prisma.sport.findUnique({
+    where: { id: primarySportId },
   });
   const court = payload.courtId
     ? await prisma.court.findUnique({
@@ -209,19 +190,23 @@ bookings.post("/", zValidator("json", bookingSchema), async (c) => {
     return c.json({ message: "Selected booking option is not available." }, 400);
   }
 
-  if (sport.id === "ahtme-sauna-small" && payload.participants > 5) {
-    return c.json({ message: "Sauna booking allows a maximum of 5 participants." }, 400);
+  if (selectedOption && selectedOption.centerId !== DEMO_CENTER_ID) {
+    return c.json({ message: "Selected booking option is not available." }, 400);
   }
 
-  if (sport.id === "ahtme-sauna-gym" && payload.participants > 10) {
-    return c.json({ message: "Sauna and gym booking allows a maximum of 10 participants." }, 400);
+  if (!selectedOption && payload.participants > sport.participantMax) {
+    return c.json({ message: "Selected booking option has too many participants." }, 400);
+  }
+
+  if (selectedOption && payload.participants > selectedOption.participantMax) {
+    return c.json({ message: "Selected booking option has too many participants." }, 400);
   }
 
   if (
     !isWithinOpeningWindow(
       payload.date,
       payload.time,
-      sport.durationMinutes,
+      selectedOption?.durationMinutes ?? sport.durationMinutes,
       payload.centerId,
     )
   ) {
@@ -233,7 +218,6 @@ bookings.post("/", zValidator("json", bookingSchema), async (c) => {
       centerId: payload.centerId,
     },
   });
-  const componentSportIds = getPackageComponentSportIds(sport.id);
   const componentCourts =
     componentSportIds.length > 0
       ? await Promise.all(
@@ -250,8 +234,13 @@ bookings.post("/", zValidator("json", bookingSchema), async (c) => {
     return c.json({ message: "Package resources are not available." }, 400);
   }
 
+  if (selectedOption && componentSportIds.length === 0) {
+    return c.json({ message: "Booking option has no resources." }, 400);
+  }
+
   const requestedStart = new Date(`${payload.date}T${payload.time}`).getTime();
-  const requestedEnd = requestedStart + sport.durationMinutes * 60 * 1000;
+  const bookingDuration = selectedOption?.durationMinutes ?? sport.durationMinutes;
+  const requestedEnd = requestedStart + bookingDuration * 60 * 1000;
   const overlapsCourt = (requestedSportId: string, requestedCourtId: string) =>
     isArenaCapacityUnavailable(
       requestedSportId,
@@ -275,13 +264,13 @@ bookings.post("/", zValidator("json", bookingSchema), async (c) => {
       const bookedEnd = bookedStart + item.duration * 60 * 1000;
       return !(requestedEnd <= bookedStart || requestedStart >= bookedEnd);
     });
-  const requestedResources = [
-    { sportId: sport.id, courtId: court.id },
-    ...componentCourts.map((item, index) => ({
-      sportId: componentSportIds[index],
-      courtId: item!.id,
-    })),
-  ];
+  const requestedResources =
+    selectedOption
+      ? componentCourts.map((item, index) => ({
+          sportId: componentSportIds[index],
+          courtId: item!.id,
+        }))
+      : [{ sportId: sport.id, courtId: court.id }];
   const overlaps = requestedResources.some((item) =>
     overlapsCourt(item.sportId, item.courtId),
   );
@@ -292,15 +281,46 @@ bookings.post("/", zValidator("json", bookingSchema), async (c) => {
 
   const bookingId = payload.id ?? `b${Date.now()}`;
   const booking = await prisma.$transaction(async (tx) => {
+    if (selectedOption) {
+      const optionBookings = await Promise.all(
+        componentCourts.map((item, index) =>
+          tx.booking.create({
+            data: {
+              id: index === 0 ? bookingId : `${bookingId}-part-${index + 1}`,
+              bookingGroupId: bookingId,
+              bookingOptionId: selectedOption.id,
+              bookingOptionName: selectedOption.key,
+              sportId: componentSportIds[index],
+              centerId: payload.centerId,
+              courtId: item!.id,
+              date: payload.date,
+              time: payload.time,
+              duration: bookingDuration,
+              name: payload.name,
+              email: payload.email,
+              phone: payload.phone,
+              participants: payload.participants,
+              status: payload.status,
+              note: index === 0 ? payload.note ?? "" : `Broneerimisvaliku osa: ${selectedOption.key}`,
+              equipment: index === 0 ? payload.equipment : [],
+            },
+          }),
+        ),
+      );
+
+      return optionBookings[0];
+    }
+
     const mainBooking = await tx.booking.create({
       data: {
         id: bookingId,
-        sportId: payload.sportId,
+        bookingGroupId: bookingId,
+        sportId: sport.id,
         centerId: payload.centerId,
         courtId: payload.courtId,
         date: payload.date,
         time: payload.time,
-        duration: sport.durationMinutes,
+        duration: bookingDuration,
         name: payload.name,
         email: payload.email,
         phone: payload.phone,
@@ -310,27 +330,6 @@ bookings.post("/", zValidator("json", bookingSchema), async (c) => {
         equipment: payload.equipment,
       },
     });
-
-    if (componentCourts.length > 0) {
-      await tx.booking.createMany({
-        data: componentCourts.map((item, index) => ({
-          id: `${bookingId}-part-${index + 1}`,
-          sportId: componentSportIds[index],
-          centerId: payload.centerId,
-          courtId: item!.id,
-          date: payload.date,
-          time: payload.time,
-          duration: sport.durationMinutes,
-          name: payload.name,
-          email: payload.email,
-          phone: payload.phone,
-          participants: payload.participants,
-          status: payload.status,
-          note: `Paketi osa: ${sport.key}`,
-          equipment: [],
-        })),
-      });
-    }
 
     return mainBooking;
   });

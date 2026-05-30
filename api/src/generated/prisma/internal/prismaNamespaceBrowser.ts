@@ -52,11 +52,18 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Sport: 'Sport',
+  BookingOption: 'BookingOption',
+  BookingOptionComponent: 'BookingOptionComponent',
   EquipmentItem: 'EquipmentItem',
+  PricingRule: 'PricingRule',
   SportCenter: 'SportCenter',
   CenterSport: 'CenterSport',
   Court: 'Court',
   Booking: 'Booking',
+  User: 'User',
+  Session: 'Session',
+  Account: 'Account',
+  Verification: 'Verification',
   OpenGame: 'OpenGame',
   GameRegistration: 'GameRegistration',
   GameWaitlistEntry: 'GameWaitlistEntry'
@@ -85,10 +92,38 @@ export const SportScalarFieldEnum = {
   priceMin: 'priceMin',
   priceMax: 'priceMax',
   durationMinutes: 'durationMinutes',
+  category: 'category',
+  participantMax: 'participantMax',
+  note: 'note',
   equipmentOptions: 'equipmentOptions'
 } as const
 
 export type SportScalarFieldEnum = (typeof SportScalarFieldEnum)[keyof typeof SportScalarFieldEnum]
+
+
+export const BookingOptionScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  centerId: 'centerId',
+  hourlyPrice: 'hourlyPrice',
+  priceMin: 'priceMin',
+  priceMax: 'priceMax',
+  durationMinutes: 'durationMinutes',
+  category: 'category',
+  participantMax: 'participantMax',
+  note: 'note'
+} as const
+
+export type BookingOptionScalarFieldEnum = (typeof BookingOptionScalarFieldEnum)[keyof typeof BookingOptionScalarFieldEnum]
+
+
+export const BookingOptionComponentScalarFieldEnum = {
+  optionId: 'optionId',
+  sportId: 'sportId',
+  position: 'position'
+} as const
+
+export type BookingOptionComponentScalarFieldEnum = (typeof BookingOptionComponentScalarFieldEnum)[keyof typeof BookingOptionComponentScalarFieldEnum]
 
 
 export const EquipmentItemScalarFieldEnum = {
@@ -97,6 +132,21 @@ export const EquipmentItemScalarFieldEnum = {
 } as const
 
 export type EquipmentItemScalarFieldEnum = (typeof EquipmentItemScalarFieldEnum)[keyof typeof EquipmentItemScalarFieldEnum]
+
+
+export const PricingRuleScalarFieldEnum = {
+  id: 'id',
+  serviceId: 'serviceId',
+  price: 'price',
+  priority: 'priority',
+  months: 'months',
+  weekdays: 'weekdays',
+  startMinute: 'startMinute',
+  endMinute: 'endMinute',
+  organizationType: 'organizationType'
+} as const
+
+export type PricingRuleScalarFieldEnum = (typeof PricingRuleScalarFieldEnum)[keyof typeof PricingRuleScalarFieldEnum]
 
 
 export const SportCenterScalarFieldEnum = {
@@ -134,6 +184,9 @@ export type CourtScalarFieldEnum = (typeof CourtScalarFieldEnum)[keyof typeof Co
 export const BookingScalarFieldEnum = {
   id: 'id',
   sportId: 'sportId',
+  bookingGroupId: 'bookingGroupId',
+  bookingOptionId: 'bookingOptionId',
+  bookingOptionName: 'bookingOptionName',
   centerId: 'centerId',
   courtId: 'courtId',
   date: 'date',
@@ -150,6 +203,68 @@ export const BookingScalarFieldEnum = {
 } as const
 
 export type BookingScalarFieldEnum = (typeof BookingScalarFieldEnum)[keyof typeof BookingScalarFieldEnum]
+
+
+export const UserScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  emailVerified: 'emailVerified',
+  image: 'image',
+  username: 'username',
+  displayUsername: 'displayUsername',
+  role: 'role',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const SessionScalarFieldEnum = {
+  id: 'id',
+  expiresAt: 'expiresAt',
+  token: 'token',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  userId: 'userId'
+} as const
+
+export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeof SessionScalarFieldEnum]
+
+
+export const AccountScalarFieldEnum = {
+  id: 'id',
+  accountId: 'accountId',
+  providerId: 'providerId',
+  userId: 'userId',
+  accessToken: 'accessToken',
+  refreshToken: 'refreshToken',
+  idToken: 'idToken',
+  accessTokenExpiresAt: 'accessTokenExpiresAt',
+  refreshTokenExpiresAt: 'refreshTokenExpiresAt',
+  scope: 'scope',
+  password: 'password',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AccountScalarFieldEnum = (typeof AccountScalarFieldEnum)[keyof typeof AccountScalarFieldEnum]
+
+
+export const VerificationScalarFieldEnum = {
+  id: 'id',
+  identifier: 'identifier',
+  value: 'value',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
 
 
 export const OpenGameScalarFieldEnum = {

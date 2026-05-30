@@ -9,11 +9,18 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Sport.js'
+export type * from './models/BookingOption.js'
+export type * from './models/BookingOptionComponent.js'
 export type * from './models/EquipmentItem.js'
+export type * from './models/PricingRule.js'
 export type * from './models/SportCenter.js'
 export type * from './models/CenterSport.js'
 export type * from './models/Court.js'
 export type * from './models/Booking.js'
+export type * from './models/User.js'
+export type * from './models/Session.js'
+export type * from './models/Account.js'
+export type * from './models/Verification.js'
 export type * from './models/OpenGame.js'
 export type * from './models/GameRegistration.js'
 export type * from './models/GameWaitlistEntry.js'

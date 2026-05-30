@@ -2,7 +2,6 @@ import { useCatalogQuery } from "@/hooks/use-api-data";
 import { useLang } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { MapPin } from "lucide-react";
-import { getLocalizedSportName } from "@/lib/sport-labels";
 
 export default function CenterCards() {
   const { lang, t } = useLang();
@@ -10,11 +9,10 @@ export default function CenterCards() {
   const { data, isLoading } = useCatalogQuery();
 
   const centers = data?.sportCenters ?? [];
-  const sports = data?.sports ?? [];
-  const getSportName = (sportId: string) => {
-    const sport = sports.find((item) => item.id === sportId);
-    if (!sport) return sportId;
-    return getLocalizedSportName(sport, lang, t.sportNames);
+  const services = [...(data?.sports ?? []), ...(data?.bookingOptions ?? [])];
+  const getServiceName = (serviceId: string) => {
+    const service = services.find((item) => item.id === serviceId);
+    return service?.key ?? serviceId;
   };
 
   return (
@@ -55,17 +53,17 @@ export default function CenterCards() {
                   {center.description[lang === "ru" ? "en" : lang]}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-1.5">
-                  {center.sportIds.slice(0, 4).map((sportId) => (
+                  {[...center.sportIds, ...center.bookingOptionIds].slice(0, 4).map((sportId) => (
                     <span
                       key={sportId}
                       className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
                     >
-                      {getSportName(sportId)}
+                      {getServiceName(sportId)}
                     </span>
                   ))}
-                  {center.sportIds.length > 4 && (
+                  {center.sportIds.length + center.bookingOptionIds.length > 4 && (
                     <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                      +{center.sportIds.length - 4}
+                      +{center.sportIds.length + center.bookingOptionIds.length - 4}
                     </span>
                   )}
                 </div>

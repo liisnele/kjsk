@@ -23,10 +23,25 @@ export * from './enums.js';
  */
 export type Sport = Prisma.SportModel
 /**
+ * Model BookingOption
+ * 
+ */
+export type BookingOption = Prisma.BookingOptionModel
+/**
+ * Model BookingOptionComponent
+ * 
+ */
+export type BookingOptionComponent = Prisma.BookingOptionComponentModel
+/**
  * Model EquipmentItem
  * 
  */
 export type EquipmentItem = Prisma.EquipmentItemModel
+/**
+ * Model PricingRule
+ * 
+ */
+export type PricingRule = Prisma.PricingRuleModel
 /**
  * Model SportCenter
  * 
@@ -47,6 +62,26 @@ export type Court = Prisma.CourtModel
  * 
  */
 export type Booking = Prisma.BookingModel
+/**
+ * Model User
+ * 
+ */
+export type User = Prisma.UserModel
+/**
+ * Model Session
+ * 
+ */
+export type Session = Prisma.SessionModel
+/**
+ * Model Account
+ * 
+ */
+export type Account = Prisma.AccountModel
+/**
+ * Model Verification
+ * 
+ */
+export type Verification = Prisma.VerificationModel
 /**
  * Model OpenGame
  * 

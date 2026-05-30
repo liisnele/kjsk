@@ -8,13 +8,16 @@
     "start": "node dist/src/index.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed-admins": "tsx prisma/seed-admins.ts",
+    "prisma:sync-booking-options": "tsx prisma/sync-booking-options.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.9",
     "@hono/zod-validator": "^0.7.6",
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.2",
+    "better-auth": "^1.6.11",
     "dotenv": "^17.3.1",
     "hono": "^4.12.3",
     "pg": "^8.19.0",

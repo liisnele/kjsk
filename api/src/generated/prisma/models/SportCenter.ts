@@ -245,6 +245,7 @@ export type SportCenterWhereInput = {
   openingHour?: Prisma.IntFilter<"SportCenter"> | number
   closingHour?: Prisma.IntFilter<"SportCenter"> | number
   sports?: Prisma.CenterSportListRelationFilter
+  bookingOptions?: Prisma.BookingOptionListRelationFilter
   courts?: Prisma.CourtListRelationFilter
   bookings?: Prisma.BookingListRelationFilter
   openGames?: Prisma.OpenGameListRelationFilter
@@ -260,6 +261,7 @@ export type SportCenterOrderByWithRelationInput = {
   openingHour?: Prisma.SortOrder
   closingHour?: Prisma.SortOrder
   sports?: Prisma.CenterSportOrderByRelationAggregateInput
+  bookingOptions?: Prisma.BookingOptionOrderByRelationAggregateInput
   courts?: Prisma.CourtOrderByRelationAggregateInput
   bookings?: Prisma.BookingOrderByRelationAggregateInput
   openGames?: Prisma.OpenGameOrderByRelationAggregateInput
@@ -278,6 +280,7 @@ export type SportCenterWhereUniqueInput = Prisma.AtLeast<{
   openingHour?: Prisma.IntFilter<"SportCenter"> | number
   closingHour?: Prisma.IntFilter<"SportCenter"> | number
   sports?: Prisma.CenterSportListRelationFilter
+  bookingOptions?: Prisma.BookingOptionListRelationFilter
   courts?: Prisma.CourtListRelationFilter
   bookings?: Prisma.BookingListRelationFilter
   openGames?: Prisma.OpenGameListRelationFilter
@@ -323,6 +326,7 @@ export type SportCenterCreateInput = {
   openingHour: number
   closingHour: number
   sports?: Prisma.CenterSportCreateNestedManyWithoutCenterInput
+  bookingOptions?: Prisma.BookingOptionCreateNestedManyWithoutCenterInput
   courts?: Prisma.CourtCreateNestedManyWithoutCenterInput
   bookings?: Prisma.BookingCreateNestedManyWithoutCenterInput
   openGames?: Prisma.OpenGameCreateNestedManyWithoutCenterInput
@@ -338,6 +342,7 @@ export type SportCenterUncheckedCreateInput = {
   openingHour: number
   closingHour: number
   sports?: Prisma.CenterSportUncheckedCreateNestedManyWithoutCenterInput
+  bookingOptions?: Prisma.BookingOptionUncheckedCreateNestedManyWithoutCenterInput
   courts?: Prisma.CourtUncheckedCreateNestedManyWithoutCenterInput
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutCenterInput
   openGames?: Prisma.OpenGameUncheckedCreateNestedManyWithoutCenterInput
@@ -353,6 +358,7 @@ export type SportCenterUpdateInput = {
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
   sports?: Prisma.CenterSportUpdateManyWithoutCenterNestedInput
+  bookingOptions?: Prisma.BookingOptionUpdateManyWithoutCenterNestedInput
   courts?: Prisma.CourtUpdateManyWithoutCenterNestedInput
   bookings?: Prisma.BookingUpdateManyWithoutCenterNestedInput
   openGames?: Prisma.OpenGameUpdateManyWithoutCenterNestedInput
@@ -368,6 +374,7 @@ export type SportCenterUncheckedUpdateInput = {
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
   sports?: Prisma.CenterSportUncheckedUpdateManyWithoutCenterNestedInput
+  bookingOptions?: Prisma.BookingOptionUncheckedUpdateManyWithoutCenterNestedInput
   courts?: Prisma.CourtUncheckedUpdateManyWithoutCenterNestedInput
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutCenterNestedInput
   openGames?: Prisma.OpenGameUncheckedUpdateManyWithoutCenterNestedInput
@@ -404,6 +411,11 @@ export type SportCenterUncheckedUpdateManyInput = {
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
+}
+
+export type SportCenterScalarRelationFilter = {
+  is?: Prisma.SportCenterWhereInput
+  isNot?: Prisma.SportCenterWhereInput
 }
 
 export type SportCenterCountOrderByAggregateInput = {
@@ -449,9 +461,18 @@ export type SportCenterSumOrderByAggregateInput = {
   closingHour?: Prisma.SortOrder
 }
 
-export type SportCenterScalarRelationFilter = {
-  is?: Prisma.SportCenterWhereInput
-  isNot?: Prisma.SportCenterWhereInput
+export type SportCenterCreateNestedOneWithoutBookingOptionsInput = {
+  create?: Prisma.XOR<Prisma.SportCenterCreateWithoutBookingOptionsInput, Prisma.SportCenterUncheckedCreateWithoutBookingOptionsInput>
+  connectOrCreate?: Prisma.SportCenterCreateOrConnectWithoutBookingOptionsInput
+  connect?: Prisma.SportCenterWhereUniqueInput
+}
+
+export type SportCenterUpdateOneRequiredWithoutBookingOptionsNestedInput = {
+  create?: Prisma.XOR<Prisma.SportCenterCreateWithoutBookingOptionsInput, Prisma.SportCenterUncheckedCreateWithoutBookingOptionsInput>
+  connectOrCreate?: Prisma.SportCenterCreateOrConnectWithoutBookingOptionsInput
+  upsert?: Prisma.SportCenterUpsertWithoutBookingOptionsInput
+  connect?: Prisma.SportCenterWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.SportCenterUpdateToOneWithWhereWithoutBookingOptionsInput, Prisma.SportCenterUpdateWithoutBookingOptionsInput>, Prisma.SportCenterUncheckedUpdateWithoutBookingOptionsInput>
 }
 
 export type SportCenterCreateNestedOneWithoutSportsInput = {
@@ -510,6 +531,82 @@ export type SportCenterUpdateOneRequiredWithoutOpenGamesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.SportCenterUpdateToOneWithWhereWithoutOpenGamesInput, Prisma.SportCenterUpdateWithoutOpenGamesInput>, Prisma.SportCenterUncheckedUpdateWithoutOpenGamesInput>
 }
 
+export type SportCenterCreateWithoutBookingOptionsInput = {
+  id: string
+  name: string
+  location: string
+  descriptionEt: string
+  descriptionEn: string
+  image: string
+  openingHour: number
+  closingHour: number
+  sports?: Prisma.CenterSportCreateNestedManyWithoutCenterInput
+  courts?: Prisma.CourtCreateNestedManyWithoutCenterInput
+  bookings?: Prisma.BookingCreateNestedManyWithoutCenterInput
+  openGames?: Prisma.OpenGameCreateNestedManyWithoutCenterInput
+}
+
+export type SportCenterUncheckedCreateWithoutBookingOptionsInput = {
+  id: string
+  name: string
+  location: string
+  descriptionEt: string
+  descriptionEn: string
+  image: string
+  openingHour: number
+  closingHour: number
+  sports?: Prisma.CenterSportUncheckedCreateNestedManyWithoutCenterInput
+  courts?: Prisma.CourtUncheckedCreateNestedManyWithoutCenterInput
+  bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutCenterInput
+  openGames?: Prisma.OpenGameUncheckedCreateNestedManyWithoutCenterInput
+}
+
+export type SportCenterCreateOrConnectWithoutBookingOptionsInput = {
+  where: Prisma.SportCenterWhereUniqueInput
+  create: Prisma.XOR<Prisma.SportCenterCreateWithoutBookingOptionsInput, Prisma.SportCenterUncheckedCreateWithoutBookingOptionsInput>
+}
+
+export type SportCenterUpsertWithoutBookingOptionsInput = {
+  update: Prisma.XOR<Prisma.SportCenterUpdateWithoutBookingOptionsInput, Prisma.SportCenterUncheckedUpdateWithoutBookingOptionsInput>
+  create: Prisma.XOR<Prisma.SportCenterCreateWithoutBookingOptionsInput, Prisma.SportCenterUncheckedCreateWithoutBookingOptionsInput>
+  where?: Prisma.SportCenterWhereInput
+}
+
+export type SportCenterUpdateToOneWithWhereWithoutBookingOptionsInput = {
+  where?: Prisma.SportCenterWhereInput
+  data: Prisma.XOR<Prisma.SportCenterUpdateWithoutBookingOptionsInput, Prisma.SportCenterUncheckedUpdateWithoutBookingOptionsInput>
+}
+
+export type SportCenterUpdateWithoutBookingOptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  location?: Prisma.StringFieldUpdateOperationsInput | string
+  descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
+  descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.StringFieldUpdateOperationsInput | string
+  openingHour?: Prisma.IntFieldUpdateOperationsInput | number
+  closingHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sports?: Prisma.CenterSportUpdateManyWithoutCenterNestedInput
+  courts?: Prisma.CourtUpdateManyWithoutCenterNestedInput
+  bookings?: Prisma.BookingUpdateManyWithoutCenterNestedInput
+  openGames?: Prisma.OpenGameUpdateManyWithoutCenterNestedInput
+}
+
+export type SportCenterUncheckedUpdateWithoutBookingOptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  location?: Prisma.StringFieldUpdateOperationsInput | string
+  descriptionEt?: Prisma.StringFieldUpdateOperationsInput | string
+  descriptionEn?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.StringFieldUpdateOperationsInput | string
+  openingHour?: Prisma.IntFieldUpdateOperationsInput | number
+  closingHour?: Prisma.IntFieldUpdateOperationsInput | number
+  sports?: Prisma.CenterSportUncheckedUpdateManyWithoutCenterNestedInput
+  courts?: Prisma.CourtUncheckedUpdateManyWithoutCenterNestedInput
+  bookings?: Prisma.BookingUncheckedUpdateManyWithoutCenterNestedInput
+  openGames?: Prisma.OpenGameUncheckedUpdateManyWithoutCenterNestedInput
+}
+
 export type SportCenterCreateWithoutSportsInput = {
   id: string
   name: string
@@ -519,6 +616,7 @@ export type SportCenterCreateWithoutSportsInput = {
   image: string
   openingHour: number
   closingHour: number
+  bookingOptions?: Prisma.BookingOptionCreateNestedManyWithoutCenterInput
   courts?: Prisma.CourtCreateNestedManyWithoutCenterInput
   bookings?: Prisma.BookingCreateNestedManyWithoutCenterInput
   openGames?: Prisma.OpenGameCreateNestedManyWithoutCenterInput
@@ -533,6 +631,7 @@ export type SportCenterUncheckedCreateWithoutSportsInput = {
   image: string
   openingHour: number
   closingHour: number
+  bookingOptions?: Prisma.BookingOptionUncheckedCreateNestedManyWithoutCenterInput
   courts?: Prisma.CourtUncheckedCreateNestedManyWithoutCenterInput
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutCenterInput
   openGames?: Prisma.OpenGameUncheckedCreateNestedManyWithoutCenterInput
@@ -563,6 +662,7 @@ export type SportCenterUpdateWithoutSportsInput = {
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
+  bookingOptions?: Prisma.BookingOptionUpdateManyWithoutCenterNestedInput
   courts?: Prisma.CourtUpdateManyWithoutCenterNestedInput
   bookings?: Prisma.BookingUpdateManyWithoutCenterNestedInput
   openGames?: Prisma.OpenGameUpdateManyWithoutCenterNestedInput
@@ -577,6 +677,7 @@ export type SportCenterUncheckedUpdateWithoutSportsInput = {
   image?: Prisma.StringFieldUpdateOperationsInput | string
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
+  bookingOptions?: Prisma.BookingOptionUncheckedUpdateManyWithoutCenterNestedInput
   courts?: Prisma.CourtUncheckedUpdateManyWithoutCenterNestedInput
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutCenterNestedInput
   openGames?: Prisma.OpenGameUncheckedUpdateManyWithoutCenterNestedInput
@@ -592,6 +693,7 @@ export type SportCenterCreateWithoutCourtsInput = {
   openingHour: number
   closingHour: number
   sports?: Prisma.CenterSportCreateNestedManyWithoutCenterInput
+  bookingOptions?: Prisma.BookingOptionCreateNestedManyWithoutCenterInput
   bookings?: Prisma.BookingCreateNestedManyWithoutCenterInput
   openGames?: Prisma.OpenGameCreateNestedManyWithoutCenterInput
 }
@@ -606,6 +708,7 @@ export type SportCenterUncheckedCreateWithoutCourtsInput = {
   openingHour: number
   closingHour: number
   sports?: Prisma.CenterSportUncheckedCreateNestedManyWithoutCenterInput
+  bookingOptions?: Prisma.BookingOptionUncheckedCreateNestedManyWithoutCenterInput
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutCenterInput
   openGames?: Prisma.OpenGameUncheckedCreateNestedManyWithoutCenterInput
 }
@@ -636,6 +739,7 @@ export type SportCenterUpdateWithoutCourtsInput = {
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
   sports?: Prisma.CenterSportUpdateManyWithoutCenterNestedInput
+  bookingOptions?: Prisma.BookingOptionUpdateManyWithoutCenterNestedInput
   bookings?: Prisma.BookingUpdateManyWithoutCenterNestedInput
   openGames?: Prisma.OpenGameUpdateManyWithoutCenterNestedInput
 }
@@ -650,6 +754,7 @@ export type SportCenterUncheckedUpdateWithoutCourtsInput = {
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
   sports?: Prisma.CenterSportUncheckedUpdateManyWithoutCenterNestedInput
+  bookingOptions?: Prisma.BookingOptionUncheckedUpdateManyWithoutCenterNestedInput
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutCenterNestedInput
   openGames?: Prisma.OpenGameUncheckedUpdateManyWithoutCenterNestedInput
 }
@@ -664,6 +769,7 @@ export type SportCenterCreateWithoutBookingsInput = {
   openingHour: number
   closingHour: number
   sports?: Prisma.CenterSportCreateNestedManyWithoutCenterInput
+  bookingOptions?: Prisma.BookingOptionCreateNestedManyWithoutCenterInput
   courts?: Prisma.CourtCreateNestedManyWithoutCenterInput
   openGames?: Prisma.OpenGameCreateNestedManyWithoutCenterInput
 }
@@ -678,6 +784,7 @@ export type SportCenterUncheckedCreateWithoutBookingsInput = {
   openingHour: number
   closingHour: number
   sports?: Prisma.CenterSportUncheckedCreateNestedManyWithoutCenterInput
+  bookingOptions?: Prisma.BookingOptionUncheckedCreateNestedManyWithoutCenterInput
   courts?: Prisma.CourtUncheckedCreateNestedManyWithoutCenterInput
   openGames?: Prisma.OpenGameUncheckedCreateNestedManyWithoutCenterInput
 }
@@ -708,6 +815,7 @@ export type SportCenterUpdateWithoutBookingsInput = {
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
   sports?: Prisma.CenterSportUpdateManyWithoutCenterNestedInput
+  bookingOptions?: Prisma.BookingOptionUpdateManyWithoutCenterNestedInput
   courts?: Prisma.CourtUpdateManyWithoutCenterNestedInput
   openGames?: Prisma.OpenGameUpdateManyWithoutCenterNestedInput
 }
@@ -722,6 +830,7 @@ export type SportCenterUncheckedUpdateWithoutBookingsInput = {
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
   sports?: Prisma.CenterSportUncheckedUpdateManyWithoutCenterNestedInput
+  bookingOptions?: Prisma.BookingOptionUncheckedUpdateManyWithoutCenterNestedInput
   courts?: Prisma.CourtUncheckedUpdateManyWithoutCenterNestedInput
   openGames?: Prisma.OpenGameUncheckedUpdateManyWithoutCenterNestedInput
 }
@@ -736,6 +845,7 @@ export type SportCenterCreateWithoutOpenGamesInput = {
   openingHour: number
   closingHour: number
   sports?: Prisma.CenterSportCreateNestedManyWithoutCenterInput
+  bookingOptions?: Prisma.BookingOptionCreateNestedManyWithoutCenterInput
   courts?: Prisma.CourtCreateNestedManyWithoutCenterInput
   bookings?: Prisma.BookingCreateNestedManyWithoutCenterInput
 }
@@ -750,6 +860,7 @@ export type SportCenterUncheckedCreateWithoutOpenGamesInput = {
   openingHour: number
   closingHour: number
   sports?: Prisma.CenterSportUncheckedCreateNestedManyWithoutCenterInput
+  bookingOptions?: Prisma.BookingOptionUncheckedCreateNestedManyWithoutCenterInput
   courts?: Prisma.CourtUncheckedCreateNestedManyWithoutCenterInput
   bookings?: Prisma.BookingUncheckedCreateNestedManyWithoutCenterInput
 }
@@ -780,6 +891,7 @@ export type SportCenterUpdateWithoutOpenGamesInput = {
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
   sports?: Prisma.CenterSportUpdateManyWithoutCenterNestedInput
+  bookingOptions?: Prisma.BookingOptionUpdateManyWithoutCenterNestedInput
   courts?: Prisma.CourtUpdateManyWithoutCenterNestedInput
   bookings?: Prisma.BookingUpdateManyWithoutCenterNestedInput
 }
@@ -794,6 +906,7 @@ export type SportCenterUncheckedUpdateWithoutOpenGamesInput = {
   openingHour?: Prisma.IntFieldUpdateOperationsInput | number
   closingHour?: Prisma.IntFieldUpdateOperationsInput | number
   sports?: Prisma.CenterSportUncheckedUpdateManyWithoutCenterNestedInput
+  bookingOptions?: Prisma.BookingOptionUncheckedUpdateManyWithoutCenterNestedInput
   courts?: Prisma.CourtUncheckedUpdateManyWithoutCenterNestedInput
   bookings?: Prisma.BookingUncheckedUpdateManyWithoutCenterNestedInput
 }
@@ -805,6 +918,7 @@ export type SportCenterUncheckedUpdateWithoutOpenGamesInput = {
 
 export type SportCenterCountOutputType = {
   sports: number
+  bookingOptions: number
   courts: number
   bookings: number
   openGames: number
@@ -812,6 +926,7 @@ export type SportCenterCountOutputType = {
 
 export type SportCenterCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sports?: boolean | SportCenterCountOutputTypeCountSportsArgs
+  bookingOptions?: boolean | SportCenterCountOutputTypeCountBookingOptionsArgs
   courts?: boolean | SportCenterCountOutputTypeCountCourtsArgs
   bookings?: boolean | SportCenterCountOutputTypeCountBookingsArgs
   openGames?: boolean | SportCenterCountOutputTypeCountOpenGamesArgs
@@ -832,6 +947,13 @@ export type SportCenterCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.
  */
 export type SportCenterCountOutputTypeCountSportsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.CenterSportWhereInput
+}
+
+/**
+ * SportCenterCountOutputType without action
+ */
+export type SportCenterCountOutputTypeCountBookingOptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BookingOptionWhereInput
 }
 
 /**
@@ -866,6 +988,7 @@ export type SportCenterSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   openingHour?: boolean
   closingHour?: boolean
   sports?: boolean | Prisma.SportCenter$sportsArgs<ExtArgs>
+  bookingOptions?: boolean | Prisma.SportCenter$bookingOptionsArgs<ExtArgs>
   courts?: boolean | Prisma.SportCenter$courtsArgs<ExtArgs>
   bookings?: boolean | Prisma.SportCenter$bookingsArgs<ExtArgs>
   openGames?: boolean | Prisma.SportCenter$openGamesArgs<ExtArgs>
@@ -908,6 +1031,7 @@ export type SportCenterSelectScalar = {
 export type SportCenterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "location" | "descriptionEt" | "descriptionEn" | "image" | "openingHour" | "closingHour", ExtArgs["result"]["sportCenter"]>
 export type SportCenterInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sports?: boolean | Prisma.SportCenter$sportsArgs<ExtArgs>
+  bookingOptions?: boolean | Prisma.SportCenter$bookingOptionsArgs<ExtArgs>
   courts?: boolean | Prisma.SportCenter$courtsArgs<ExtArgs>
   bookings?: boolean | Prisma.SportCenter$bookingsArgs<ExtArgs>
   openGames?: boolean | Prisma.SportCenter$openGamesArgs<ExtArgs>
@@ -920,6 +1044,7 @@ export type $SportCenterPayload<ExtArgs extends runtime.Types.Extensions.Interna
   name: "SportCenter"
   objects: {
     sports: Prisma.$CenterSportPayload<ExtArgs>[]
+    bookingOptions: Prisma.$BookingOptionPayload<ExtArgs>[]
     courts: Prisma.$CourtPayload<ExtArgs>[]
     bookings: Prisma.$BookingPayload<ExtArgs>[]
     openGames: Prisma.$OpenGamePayload<ExtArgs>[]
@@ -1328,6 +1453,7 @@ readonly fields: SportCenterFieldRefs;
 export interface Prisma__SportCenterClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   sports<T extends Prisma.SportCenter$sportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SportCenter$sportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CenterSportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  bookingOptions<T extends Prisma.SportCenter$bookingOptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SportCenter$bookingOptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BookingOptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   courts<T extends Prisma.SportCenter$courtsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SportCenter$courtsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CourtPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   bookings<T extends Prisma.SportCenter$bookingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SportCenter$bookingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BookingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   openGames<T extends Prisma.SportCenter$openGamesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SportCenter$openGamesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OpenGamePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -1782,6 +1908,30 @@ export type SportCenter$sportsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.CenterSportScalarFieldEnum | Prisma.CenterSportScalarFieldEnum[]
+}
+
+/**
+ * SportCenter.bookingOptions
+ */
+export type SportCenter$bookingOptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BookingOption
+   */
+  select?: Prisma.BookingOptionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BookingOption
+   */
+  omit?: Prisma.BookingOptionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BookingOptionInclude<ExtArgs> | null
+  where?: Prisma.BookingOptionWhereInput
+  orderBy?: Prisma.BookingOptionOrderByWithRelationInput | Prisma.BookingOptionOrderByWithRelationInput[]
+  cursor?: Prisma.BookingOptionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BookingOptionScalarFieldEnum | Prisma.BookingOptionScalarFieldEnum[]
 }
 
 /**

@@ -1,6 +1,8 @@
 import {
   serializeCenter,
+  serializeBookingOption,
   serializeEquipment,
+  serializePricingRule,
   serializeSport,
 } from "@/lib/serializers.js";
 import { prisma } from "@/lib/prisma.js";
@@ -26,7 +28,7 @@ const HIDDEN_DEMO_SPORT_IDS = [
 ];
 
 catalog.get("/", async (c) => {
-  const [sports, centers, equipment] = await Promise.all([
+  const [sports, bookingOptions, centers, equipment, pricingRules] = await Promise.all([
     prisma.sport.findMany({
       where: {
         id: {
@@ -49,6 +51,21 @@ catalog.get("/", async (c) => {
         key: "asc",
       },
     }),
+    prisma.bookingOption.findMany({
+      where: {
+        centerId: DEMO_CENTER_ID,
+      },
+      include: {
+        components: {
+          orderBy: {
+            position: "asc",
+          },
+        },
+      },
+      orderBy: {
+        key: "asc",
+      },
+    }),
     prisma.sportCenter.findMany({
       where: {
         id: DEMO_CENTER_ID,
@@ -61,6 +78,7 @@ catalog.get("/", async (c) => {
             },
           },
         },
+        bookingOptions: true,
         courts: {
           where: {
             sportId: {
@@ -81,16 +99,24 @@ catalog.get("/", async (c) => {
         id: "asc",
       },
     }),
+    prisma.pricingRule.findMany({
+      orderBy: [{ serviceId: "asc" }, { priority: "desc" }, { id: "asc" }],
+    }),
   ]);
 
   return c.json({
     sports: sports.map(serializeSport),
+    bookingOptions: bookingOptions.map(serializeBookingOption),
     sportCenters: centers.map(serializeCenter),
+    pricingRules: pricingRules.map(serializePricingRule),
     equipmentPrices: Object.fromEntries(
       equipment.map((item) => [item.id, serializeEquipment(item).price]),
     ),
     sportPrices: Object.fromEntries(
-      sports.map((sport) => [sport.id, sport.hourlyPrice]),
+      [
+        ...sports.map((sport) => [sport.id, sport.hourlyPrice] as const),
+        ...bookingOptions.map((option) => [option.id, option.hourlyPrice] as const),
+      ],
     ),
   });
 });

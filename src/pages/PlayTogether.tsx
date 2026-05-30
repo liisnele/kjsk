@@ -14,7 +14,6 @@ import {
   getAvailableTimesWithMinDuration,
   isDurationAvailable,
 } from "@/lib/availability";
-import { getLocalizedSportName } from "@/lib/sport-labels";
 import { cn } from "@/lib/utils";
 import type { SkillLevel } from "@/types/api";
 import {
@@ -76,8 +75,7 @@ export default function PlayTogetherPage() {
 
   const inputCls =
     "w-full rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring";
-  const getSportName = (sport: typeof sports[number]) =>
-    getLocalizedSportName(sport, lang, t.sportNames);
+  const getSportName = (sport: typeof sports[number]) => sport.key;
 
   const centersForCreate = createForm.sportId
     ? sportCenters.filter((center) => center.sportIds.includes(createForm.sportId))

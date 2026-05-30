@@ -83,6 +83,19 @@
   .sport-card:active {
     transform: scale(0.98);
   }
+
+  .admin-date-input {
+    color-scheme: dark;
+  }
+
+  .admin-date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0;
+  }
+
+  .admin-date-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 0;
+  }
 }
 
 @layer utilities {

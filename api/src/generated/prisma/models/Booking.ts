@@ -39,6 +39,9 @@ export type BookingSumAggregateOutputType = {
 export type BookingMinAggregateOutputType = {
   id: string | null
   sportId: string | null
+  bookingGroupId: string | null
+  bookingOptionId: string | null
+  bookingOptionName: string | null
   centerId: string | null
   courtId: string | null
   date: string | null
@@ -56,6 +59,9 @@ export type BookingMinAggregateOutputType = {
 export type BookingMaxAggregateOutputType = {
   id: string | null
   sportId: string | null
+  bookingGroupId: string | null
+  bookingOptionId: string | null
+  bookingOptionName: string | null
   centerId: string | null
   courtId: string | null
   date: string | null
@@ -73,6 +79,9 @@ export type BookingMaxAggregateOutputType = {
 export type BookingCountAggregateOutputType = {
   id: number
   sportId: number
+  bookingGroupId: number
+  bookingOptionId: number
+  bookingOptionName: number
   centerId: number
   courtId: number
   date: number
@@ -103,6 +112,9 @@ export type BookingSumAggregateInputType = {
 export type BookingMinAggregateInputType = {
   id?: true
   sportId?: true
+  bookingGroupId?: true
+  bookingOptionId?: true
+  bookingOptionName?: true
   centerId?: true
   courtId?: true
   date?: true
@@ -120,6 +132,9 @@ export type BookingMinAggregateInputType = {
 export type BookingMaxAggregateInputType = {
   id?: true
   sportId?: true
+  bookingGroupId?: true
+  bookingOptionId?: true
+  bookingOptionName?: true
   centerId?: true
   courtId?: true
   date?: true
@@ -137,6 +152,9 @@ export type BookingMaxAggregateInputType = {
 export type BookingCountAggregateInputType = {
   id?: true
   sportId?: true
+  bookingGroupId?: true
+  bookingOptionId?: true
+  bookingOptionName?: true
   centerId?: true
   courtId?: true
   date?: true
@@ -242,6 +260,9 @@ export type BookingGroupByArgs<ExtArgs extends runtime.Types.Extensions.Internal
 export type BookingGroupByOutputType = {
   id: string
   sportId: string
+  bookingGroupId: string | null
+  bookingOptionId: string | null
+  bookingOptionName: string | null
   centerId: string
   courtId: string | null
   date: string
@@ -283,6 +304,9 @@ export type BookingWhereInput = {
   NOT?: Prisma.BookingWhereInput | Prisma.BookingWhereInput[]
   id?: Prisma.StringFilter<"Booking"> | string
   sportId?: Prisma.StringFilter<"Booking"> | string
+  bookingGroupId?: Prisma.StringNullableFilter<"Booking"> | string | null
+  bookingOptionId?: Prisma.StringNullableFilter<"Booking"> | string | null
+  bookingOptionName?: Prisma.StringNullableFilter<"Booking"> | string | null
   centerId?: Prisma.StringFilter<"Booking"> | string
   courtId?: Prisma.StringNullableFilter<"Booking"> | string | null
   date?: Prisma.StringFilter<"Booking"> | string
@@ -304,6 +328,9 @@ export type BookingWhereInput = {
 export type BookingOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   sportId?: Prisma.SortOrder
+  bookingGroupId?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookingOptionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookingOptionName?: Prisma.SortOrderInput | Prisma.SortOrder
   centerId?: Prisma.SortOrder
   courtId?: Prisma.SortOrderInput | Prisma.SortOrder
   date?: Prisma.SortOrder
@@ -328,6 +355,9 @@ export type BookingWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.BookingWhereInput[]
   NOT?: Prisma.BookingWhereInput | Prisma.BookingWhereInput[]
   sportId?: Prisma.StringFilter<"Booking"> | string
+  bookingGroupId?: Prisma.StringNullableFilter<"Booking"> | string | null
+  bookingOptionId?: Prisma.StringNullableFilter<"Booking"> | string | null
+  bookingOptionName?: Prisma.StringNullableFilter<"Booking"> | string | null
   centerId?: Prisma.StringFilter<"Booking"> | string
   courtId?: Prisma.StringNullableFilter<"Booking"> | string | null
   date?: Prisma.StringFilter<"Booking"> | string
@@ -349,6 +379,9 @@ export type BookingWhereUniqueInput = Prisma.AtLeast<{
 export type BookingOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   sportId?: Prisma.SortOrder
+  bookingGroupId?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookingOptionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookingOptionName?: Prisma.SortOrderInput | Prisma.SortOrder
   centerId?: Prisma.SortOrder
   courtId?: Prisma.SortOrderInput | Prisma.SortOrder
   date?: Prisma.SortOrder
@@ -375,6 +408,9 @@ export type BookingScalarWhereWithAggregatesInput = {
   NOT?: Prisma.BookingScalarWhereWithAggregatesInput | Prisma.BookingScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Booking"> | string
   sportId?: Prisma.StringWithAggregatesFilter<"Booking"> | string
+  bookingGroupId?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
+  bookingOptionId?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
+  bookingOptionName?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
   centerId?: Prisma.StringWithAggregatesFilter<"Booking"> | string
   courtId?: Prisma.StringNullableWithAggregatesFilter<"Booking"> | string | null
   date?: Prisma.StringWithAggregatesFilter<"Booking"> | string
@@ -392,6 +428,9 @@ export type BookingScalarWhereWithAggregatesInput = {
 
 export type BookingCreateInput = {
   id: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   date: string
   time: string
   duration: number
@@ -411,6 +450,9 @@ export type BookingCreateInput = {
 export type BookingUncheckedCreateInput = {
   id: string
   sportId: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   centerId: string
   courtId?: string | null
   date: string
@@ -428,6 +470,9 @@ export type BookingUncheckedCreateInput = {
 
 export type BookingUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
   duration?: Prisma.IntFieldUpdateOperationsInput | number
@@ -447,6 +492,9 @@ export type BookingUpdateInput = {
 export type BookingUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sportId?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   centerId?: Prisma.StringFieldUpdateOperationsInput | string
   courtId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
@@ -465,6 +513,9 @@ export type BookingUncheckedUpdateInput = {
 export type BookingCreateManyInput = {
   id: string
   sportId: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   centerId: string
   courtId?: string | null
   date: string
@@ -482,6 +533,9 @@ export type BookingCreateManyInput = {
 
 export type BookingUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
   duration?: Prisma.IntFieldUpdateOperationsInput | number
@@ -498,6 +552,9 @@ export type BookingUpdateManyMutationInput = {
 export type BookingUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sportId?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   centerId?: Prisma.StringFieldUpdateOperationsInput | string
   courtId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
@@ -526,6 +583,9 @@ export type BookingOrderByRelationAggregateInput = {
 export type BookingCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sportId?: Prisma.SortOrder
+  bookingGroupId?: Prisma.SortOrder
+  bookingOptionId?: Prisma.SortOrder
+  bookingOptionName?: Prisma.SortOrder
   centerId?: Prisma.SortOrder
   courtId?: Prisma.SortOrder
   date?: Prisma.SortOrder
@@ -549,6 +609,9 @@ export type BookingAvgOrderByAggregateInput = {
 export type BookingMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sportId?: Prisma.SortOrder
+  bookingGroupId?: Prisma.SortOrder
+  bookingOptionId?: Prisma.SortOrder
+  bookingOptionName?: Prisma.SortOrder
   centerId?: Prisma.SortOrder
   courtId?: Prisma.SortOrder
   date?: Prisma.SortOrder
@@ -566,6 +629,9 @@ export type BookingMaxOrderByAggregateInput = {
 export type BookingMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sportId?: Prisma.SortOrder
+  bookingGroupId?: Prisma.SortOrder
+  bookingOptionId?: Prisma.SortOrder
+  bookingOptionName?: Prisma.SortOrder
   centerId?: Prisma.SortOrder
   courtId?: Prisma.SortOrder
   date?: Prisma.SortOrder
@@ -719,10 +785,6 @@ export type EnumBookingStatusFieldUpdateOperationsInput = {
   set?: $Enums.BookingStatus
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
-}
-
 export type BookingUpdateequipmentInput = {
   set?: string[]
   push?: string | string[]
@@ -734,6 +796,9 @@ export type DateTimeFieldUpdateOperationsInput = {
 
 export type BookingCreateWithoutSportInput = {
   id: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   date: string
   time: string
   duration: number
@@ -751,6 +816,9 @@ export type BookingCreateWithoutSportInput = {
 
 export type BookingUncheckedCreateWithoutSportInput = {
   id: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   centerId: string
   courtId?: string | null
   date: string
@@ -798,6 +866,9 @@ export type BookingScalarWhereInput = {
   NOT?: Prisma.BookingScalarWhereInput | Prisma.BookingScalarWhereInput[]
   id?: Prisma.StringFilter<"Booking"> | string
   sportId?: Prisma.StringFilter<"Booking"> | string
+  bookingGroupId?: Prisma.StringNullableFilter<"Booking"> | string | null
+  bookingOptionId?: Prisma.StringNullableFilter<"Booking"> | string | null
+  bookingOptionName?: Prisma.StringNullableFilter<"Booking"> | string | null
   centerId?: Prisma.StringFilter<"Booking"> | string
   courtId?: Prisma.StringNullableFilter<"Booking"> | string | null
   date?: Prisma.StringFilter<"Booking"> | string
@@ -815,6 +886,9 @@ export type BookingScalarWhereInput = {
 
 export type BookingCreateWithoutCenterInput = {
   id: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   date: string
   time: string
   duration: number
@@ -833,6 +907,9 @@ export type BookingCreateWithoutCenterInput = {
 export type BookingUncheckedCreateWithoutCenterInput = {
   id: string
   sportId: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   courtId?: string | null
   date: string
   time: string
@@ -875,6 +952,9 @@ export type BookingUpdateManyWithWhereWithoutCenterInput = {
 
 export type BookingCreateWithoutCourtInput = {
   id: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   date: string
   time: string
   duration: number
@@ -893,6 +973,9 @@ export type BookingCreateWithoutCourtInput = {
 export type BookingUncheckedCreateWithoutCourtInput = {
   id: string
   sportId: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   centerId: string
   date: string
   time: string
@@ -935,6 +1018,9 @@ export type BookingUpdateManyWithWhereWithoutCourtInput = {
 
 export type BookingCreateManySportInput = {
   id: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   centerId: string
   courtId?: string | null
   date: string
@@ -952,6 +1038,9 @@ export type BookingCreateManySportInput = {
 
 export type BookingUpdateWithoutSportInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
   duration?: Prisma.IntFieldUpdateOperationsInput | number
@@ -969,6 +1058,9 @@ export type BookingUpdateWithoutSportInput = {
 
 export type BookingUncheckedUpdateWithoutSportInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   centerId?: Prisma.StringFieldUpdateOperationsInput | string
   courtId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
@@ -986,6 +1078,9 @@ export type BookingUncheckedUpdateWithoutSportInput = {
 
 export type BookingUncheckedUpdateManyWithoutSportInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   centerId?: Prisma.StringFieldUpdateOperationsInput | string
   courtId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1004,6 +1099,9 @@ export type BookingUncheckedUpdateManyWithoutSportInput = {
 export type BookingCreateManyCenterInput = {
   id: string
   sportId: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   courtId?: string | null
   date: string
   time: string
@@ -1020,6 +1118,9 @@ export type BookingCreateManyCenterInput = {
 
 export type BookingUpdateWithoutCenterInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
   duration?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1038,6 +1139,9 @@ export type BookingUpdateWithoutCenterInput = {
 export type BookingUncheckedUpdateWithoutCenterInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sportId?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   courtId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1055,6 +1159,9 @@ export type BookingUncheckedUpdateWithoutCenterInput = {
 export type BookingUncheckedUpdateManyWithoutCenterInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sportId?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   courtId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1072,6 +1179,9 @@ export type BookingUncheckedUpdateManyWithoutCenterInput = {
 export type BookingCreateManyCourtInput = {
   id: string
   sportId: string
+  bookingGroupId?: string | null
+  bookingOptionId?: string | null
+  bookingOptionName?: string | null
   centerId: string
   date: string
   time: string
@@ -1088,6 +1198,9 @@ export type BookingCreateManyCourtInput = {
 
 export type BookingUpdateWithoutCourtInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
   duration?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1106,6 +1219,9 @@ export type BookingUpdateWithoutCourtInput = {
 export type BookingUncheckedUpdateWithoutCourtInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sportId?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   centerId?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1123,6 +1239,9 @@ export type BookingUncheckedUpdateWithoutCourtInput = {
 export type BookingUncheckedUpdateManyWithoutCourtInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sportId?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingGroupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookingOptionName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   centerId?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1142,6 +1261,9 @@ export type BookingUncheckedUpdateManyWithoutCourtInput = {
 export type BookingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   sportId?: boolean
+  bookingGroupId?: boolean
+  bookingOptionId?: boolean
+  bookingOptionName?: boolean
   centerId?: boolean
   courtId?: boolean
   date?: boolean
@@ -1163,6 +1285,9 @@ export type BookingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
 export type BookingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   sportId?: boolean
+  bookingGroupId?: boolean
+  bookingOptionId?: boolean
+  bookingOptionName?: boolean
   centerId?: boolean
   courtId?: boolean
   date?: boolean
@@ -1184,6 +1309,9 @@ export type BookingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
 export type BookingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   sportId?: boolean
+  bookingGroupId?: boolean
+  bookingOptionId?: boolean
+  bookingOptionName?: boolean
   centerId?: boolean
   courtId?: boolean
   date?: boolean
@@ -1205,6 +1333,9 @@ export type BookingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
 export type BookingSelectScalar = {
   id?: boolean
   sportId?: boolean
+  bookingGroupId?: boolean
+  bookingOptionId?: boolean
+  bookingOptionName?: boolean
   centerId?: boolean
   courtId?: boolean
   date?: boolean
@@ -1220,7 +1351,7 @@ export type BookingSelectScalar = {
   createdAt?: boolean
 }
 
-export type BookingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sportId" | "centerId" | "courtId" | "date" | "time" | "duration" | "name" | "email" | "phone" | "participants" | "status" | "note" | "equipment" | "createdAt", ExtArgs["result"]["booking"]>
+export type BookingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sportId" | "bookingGroupId" | "bookingOptionId" | "bookingOptionName" | "centerId" | "courtId" | "date" | "time" | "duration" | "name" | "email" | "phone" | "participants" | "status" | "note" | "equipment" | "createdAt", ExtArgs["result"]["booking"]>
 export type BookingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sport?: boolean | Prisma.SportDefaultArgs<ExtArgs>
   center?: boolean | Prisma.SportCenterDefaultArgs<ExtArgs>
@@ -1247,6 +1378,9 @@ export type $BookingPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     sportId: string
+    bookingGroupId: string | null
+    bookingOptionId: string | null
+    bookingOptionName: string | null
     centerId: string
     courtId: string | null
     date: string
@@ -1688,6 +1822,9 @@ export interface Prisma__BookingClient<T, Null = never, ExtArgs extends runtime.
 export interface BookingFieldRefs {
   readonly id: Prisma.FieldRef<"Booking", 'String'>
   readonly sportId: Prisma.FieldRef<"Booking", 'String'>
+  readonly bookingGroupId: Prisma.FieldRef<"Booking", 'String'>
+  readonly bookingOptionId: Prisma.FieldRef<"Booking", 'String'>
+  readonly bookingOptionName: Prisma.FieldRef<"Booking", 'String'>
   readonly centerId: Prisma.FieldRef<"Booking", 'String'>
   readonly courtId: Prisma.FieldRef<"Booking", 'String'>
   readonly date: Prisma.FieldRef<"Booking", 'String'>

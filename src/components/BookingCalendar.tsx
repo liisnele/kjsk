@@ -5,77 +5,25 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { enUS, et, ru } from "date-fns/locale";
-import type { Booking, Court, SportCenter } from "@/types/api";
-import { getLocalizedSportName } from "@/lib/sport-labels";
-
-const SLOT_MINUTES = 30;
-const FALLBACK_OPEN = 8 * 60;
-const FALLBACK_CLOSE = 22 * 60;
-
-function timeToMinutes(time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function minutesToTime(minutes: number) {
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-
-  return `${hours.toString().padStart(2, "0")}:${remainder
-    .toString()
-    .padStart(2, "0")}`;
-}
-
-function bookingEndTime(booking: Booking) {
-  return minutesToTime(timeToMinutes(booking.time) + booking.duration);
-}
+import {
+  arenaRowId,
+  arenaSportIds,
+  bookingEndTime,
+  buildScheduleRows,
+  getArenaLaneStyle,
+  getScheduleLeft,
+  getScheduleWidth,
+  scheduleHours,
+  scheduleLabelWidth,
+  scheduleTableWidth,
+  scheduleTimelineWidth,
+  scheduleHourWidth,
+} from "@/lib/schedule";
+import type { Booking } from "@/types/api";
 
 function getConfirmedBookings(bookings: Booking[], date: string) {
   return bookings.filter(
     (booking) => booking.date === date && booking.status === "confirmed",
-  );
-}
-
-function getCalendarRange(
-  centers: SportCenter[],
-  confirmedBookings: Booking[],
-) {
-  const openingTimes = centers.map((center) => center.openingHours.open * 60);
-  const closingTimes = centers.map((center) => center.openingHours.close * 60);
-  const bookingStarts = confirmedBookings.map((booking) => timeToMinutes(booking.time));
-  const bookingEnds = confirmedBookings.map(
-    (booking) => timeToMinutes(booking.time) + booking.duration,
-  );
-
-  return {
-    open: Math.min(FALLBACK_OPEN, ...openingTimes, ...bookingStarts),
-    close: Math.max(FALLBACK_CLOSE, ...closingTimes, ...bookingEnds),
-  };
-}
-
-function getBookingSpan(booking: Booking, rangeStart: number) {
-  const start = timeToMinutes(booking.time);
-  const end = start + booking.duration;
-
-  return {
-    columnStart: Math.floor((start - rangeStart) / SLOT_MINUTES) + 1,
-    span: Math.max(1, Math.ceil((end - start) / SLOT_MINUTES)),
-  };
-}
-
-function getCourtBookings(
-  bookings: Booking[],
-  center: SportCenter,
-  court: Court,
-) {
-  return bookings.filter(
-    (booking) =>
-      booking.centerId === center.id &&
-      (booking.courtId === court.id ||
-        (!booking.courtId &&
-          booking.sportId === court.sportId &&
-          center.courts.find((item) => item.sportId === booking.sportId)?.id ===
-            court.id)),
   );
 }
 
@@ -93,8 +41,6 @@ export default function BookingCalendar() {
   const sports = useMemo(() => catalog?.sports ?? [], [catalog?.sports]);
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const calendarLocale = lang === "ru" ? ru : lang === "en" ? enUS : et;
-  const getSportName = (sport: typeof sports[number]) =>
-    getLocalizedSportName(sport, lang, t.sportNames);
 
   const centersToShow = useMemo(
     () =>
@@ -108,36 +54,6 @@ export default function BookingCalendar() {
     () => getConfirmedBookings(bookings, dateStr),
     [bookings, dateStr],
   );
-
-  const { open, close } = useMemo(
-    () => getCalendarRange(centersToShow, confirmedBookings),
-    [centersToShow, confirmedBookings],
-  );
-
-  const timeSlots = useMemo(
-    () =>
-      Array.from(
-        { length: Math.ceil((close - open) / SLOT_MINUTES) },
-        (_, index) => minutesToTime(open + index * SLOT_MINUTES),
-      ),
-    [close, open],
-  );
-
-  const firstColumnWidth = useMemo(() => {
-    if (sportCenters.length === 0) {
-      return 140;
-    }
-
-    const longestCourtNameLength = Math.max(
-      ...sportCenters.flatMap((center) =>
-        center.courts.map((court) => court.name.length),
-      ),
-    );
-
-    return Math.max(140, longestCourtNameLength * 8);
-  }, [sportCenters]);
-
-  const gridTemplateColumns = `${firstColumnWidth}px repeat(${timeSlots.length}, minmax(42px, 1fr))`;
 
   return (
     <section className="bg-sport-gray-light py-20 md:py-28">
@@ -201,8 +117,14 @@ export default function BookingCalendar() {
             </div>
 
             <div className="flex-1 overflow-x-auto">
-              <div className="min-w-[760px]">
-                {centersToShow.map((center) => (
+              <div style={{ minWidth: scheduleTableWidth }}>
+                {centersToShow.map((center) => {
+                  const scheduleRows = buildScheduleRows(center, confirmedBookings, sports);
+                  const arenaBookings = confirmedBookings.filter((booking) =>
+                    arenaSportIds.has(booking.sportId),
+                  );
+
+                  return (
                   <div key={center.id} className="mb-6">
                     <h3 className="mb-3 font-display text-base font-semibold">
                       {center.name}
@@ -210,80 +132,74 @@ export default function BookingCalendar() {
                     <div className="overflow-hidden rounded-xl border border-border bg-card">
                       <div
                         className="grid"
-                        style={{ gridTemplateColumns }}
+                        style={{
+                          gridTemplateColumns: `${scheduleLabelWidth}px repeat(${scheduleHours.length}, ${scheduleHourWidth}px)`,
+                        }}
                       >
                         <div className="border-b border-r border-border bg-secondary/50 p-2 text-xs font-medium text-muted-foreground">
                           {t.booking.courts}
                         </div>
-                        {timeSlots.map((time) => (
+                        {scheduleHours.map((hour) => (
                           <div
-                            key={time}
+                            key={hour}
                             className="border-b border-r border-border bg-secondary/50 p-2 text-center text-xs text-muted-foreground last:border-r-0"
                           >
-                            {time.endsWith(":00") ? time : ""}
+                            {String(hour).padStart(2, "0")}:00
                           </div>
                         ))}
                       </div>
 
-                      {center.courts.map((court) => {
-                        const sport = sports.find((item) => item.id === court.sportId);
-                        const courtBookings = getCourtBookings(
-                          confirmedBookings,
-                          center,
-                          court,
-                        );
-
+                      {scheduleRows.map((row) => {
                         return (
                           <div
-                            key={court.id}
+                            key={row.id}
                             className="grid"
-                            style={{ gridTemplateColumns }}
+                            style={{
+                              gridTemplateColumns: `${scheduleLabelWidth}px ${scheduleTimelineWidth}px`,
+                            }}
                           >
-                            <div className="flex min-h-12 items-center gap-1.5 border-b border-r border-border p-2 text-xs font-medium whitespace-nowrap last:border-b-0">
-                              {sport ? getSportName(sport) : court.name}
+                            <div className="flex min-h-16 items-center gap-1.5 border-b border-r border-border p-2 text-xs font-medium whitespace-nowrap last:border-b-0">
+                              {row.name}
                             </div>
                             <div
-                              className="relative grid border-b border-border"
+                              className="relative min-h-16 border-b border-border bg-sport-success/20"
                               style={{
-                                gridColumn: `2 / span ${timeSlots.length}`,
-                                gridTemplateColumns: `repeat(${timeSlots.length}, minmax(42px, 1fr))`,
+                                gridColumn: `2 / span ${scheduleHours.length}`,
                               }}
                             >
-                              {timeSlots.map((time) => {
-                                const slotStart = timeToMinutes(time);
-                                const slotEnd = slotStart + SLOT_MINUTES;
-                                const isBooked = courtBookings.some((booking) => {
-                                  const bookingStart = timeToMinutes(booking.time);
-                                  const bookingEnd =
-                                    bookingStart + booking.duration;
-
-                                  return slotStart < bookingEnd && slotEnd > bookingStart;
-                                });
-
-                                return (
+                              <div
+                                className="absolute inset-0 grid"
+                                style={{
+                                  gridTemplateColumns: `repeat(${scheduleHours.length}, ${scheduleHourWidth}px)`,
+                                }}
+                              >
+                                {scheduleHours.map((hour) => (
                                   <div
-                                    key={time}
-                                    className={cn(
-                                      "min-h-12 border-r border-border last:border-r-0",
-                                      isBooked
-                                        ? "bg-destructive/10"
-                                        : "bg-sport-success/10",
-                                    )}
+                                    className="border-r border-border last:border-r-0"
+                                    key={hour}
                                   />
-                                );
-                              })}
+                                ))}
+                              </div>
+                              {row.bookings.length === 0 ? (
+                                <div className="absolute inset-y-0 left-0 flex items-center px-4 text-xs text-muted-foreground/60">
+                                  {t.calendar.available}
+                                </div>
+                              ) : null}
 
-                              {courtBookings.map((booking) => {
-                                const { columnStart, span } = getBookingSpan(booking, open);
+                              {row.bookings.map((booking) => {
+                                const isArena = row.id === arenaRowId;
                                 const timeLabel = `${booking.time}-${bookingEndTime(booking)}`;
 
                                 return (
                                   <div
                                     key={booking.id}
-                                    className="z-10 m-1 overflow-hidden rounded-md bg-destructive px-2 py-1 text-[10px] font-semibold leading-tight text-destructive-foreground shadow-sm"
+                                    className="absolute z-10 overflow-hidden rounded-md border border-destructive/40 bg-destructive/20 px-2 py-1 text-left text-[10px] font-semibold leading-tight text-destructive shadow-sm"
                                     style={{
-                                      gridColumn: `${columnStart} / span ${span}`,
-                                      gridRow: 1,
+                                      left: getScheduleLeft(booking),
+                                      width: getScheduleWidth(booking),
+                                      ...(isArena
+                                        ? getArenaLaneStyle(booking, arenaBookings)
+                                        : { top: "14%", height: "72%" }),
                                     }}
                                     title={timeLabel}
                                   >
@@ -302,7 +218,7 @@ export default function BookingCalendar() {
                       })}
                     </div>
                   </div>
-                ))}
+                )})}
 
                 <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5">

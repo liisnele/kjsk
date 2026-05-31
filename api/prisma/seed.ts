@@ -320,6 +320,12 @@ const games: Array<{
   equipment: string[];
 }> = [];
 async function main() {
+  if (process.env.ALLOW_DESTRUCTIVE_SEED !== "true") {
+    throw new Error(
+      "Refusing to run destructive seed. Set ALLOW_DESTRUCTIVE_SEED=true only for intentional full database resets.",
+    );
+  }
+
   const adminUsers = getAdminUsersFromEnv();
 
   await prisma.gameWaitlistEntry.deleteMany();

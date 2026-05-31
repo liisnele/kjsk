@@ -28,3 +28,4 @@ api/.env
 api/.env.*
 !.env.example
 !api/.env.example
+api/prisma/snapshots/

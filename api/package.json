@@ -8,9 +8,12 @@
     "start": "node dist/src/index.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed": "node dist/prisma/seed.js",
+    "prisma:seed:dev": "tsx prisma/seed.ts",
     "prisma:seed-admins": "node dist/prisma/seed-admins.js",
     "prisma:seed-admins:dev": "tsx prisma/seed-admins.ts",
+    "prisma:export-snapshot": "tsx prisma/export-snapshot.ts",
+    "prisma:import-snapshot": "tsx prisma/import-snapshot.ts",
     "prisma:sync-booking-options": "tsx prisma/sync-booking-options.ts"
   },
   "dependencies": {

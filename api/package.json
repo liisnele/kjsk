@@ -9,7 +9,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
-    "prisma:seed-admins": "tsx prisma/seed-admins.ts",
+    "prisma:seed-admins": "node dist/prisma/seed-admins.js",
+    "prisma:seed-admins:dev": "tsx prisma/seed-admins.ts",
     "prisma:sync-booking-options": "tsx prisma/sync-booking-options.ts"
   },
   "dependencies": {

@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   CalendarDays,
+  ChevronDown,
   Clock3,
   LogOut,
   RefreshCw,
@@ -26,8 +27,10 @@ import {
   arenaSportIds,
   buildScheduleRows,
   getArenaLaneStyle,
+  getArenaCapacity,
   getScheduleLeft,
   getScheduleWidth,
+  getScheduleWidthPixels,
   scheduleHours,
   scheduleHourWidth,
   scheduleLabelWidth,
@@ -38,6 +41,15 @@ import type { AdminBooking } from "@/types/api";
 
 const formatDateTime = (booking: AdminBooking) =>
   `${booking.date.split("-").reverse().join(".")} ${booking.time}`;
+
+const getLocalDateInputValue = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
 
 const getStatusBadgeClass = (status: AdminBooking["status"]) =>
   status === "confirmed"
@@ -67,7 +79,8 @@ export default function AdminPage() {
   const [credentials, setCredentials] = useState({ username: "", password: "" });
   const [activeView, setActiveView] = useState<"bookings" | "schedule">("bookings");
   const [filters, setFilters] = useState({ status: "confirmed", date: "", search: "" });
-  const [scheduleDate, setScheduleDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedCenterId, setSelectedCenterId] = useState("all");
+  const [scheduleDate, setScheduleDate] = useState(getLocalDateInputValue);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const meQuery = useAdminMeQuery();
   const catalogQuery = useCatalogQuery();
@@ -80,11 +93,17 @@ export default function AdminPage() {
     search: "",
   });
   const cancelMutation = useCancelAdminBookingMutation();
+  const centerOptions = catalogQuery.data?.sportCenters ?? [];
+  const filterBySelectedCenter = (booking: AdminBooking) =>
+    selectedCenterId === "all" || booking.centerId === selectedCenterId;
   const bookings = useMemo(
-    () => groupAdminBookings(bookingsQuery.data ?? []),
-    [bookingsQuery.data],
+    () => groupAdminBookings(bookingsQuery.data ?? []).filter(filterBySelectedCenter),
+    [bookingsQuery.data, selectedCenterId],
   );
-  const scheduleBookings = scheduleQuery.data ?? [];
+  const scheduleBookings = useMemo(
+    () => (scheduleQuery.data ?? []).filter(filterBySelectedCenter),
+    [scheduleQuery.data, selectedCenterId],
+  );
   const visibleBookings = activeView === "schedule" ? scheduleBookings : bookings;
   const selectedBooking = useMemo(
     () => visibleBookings.find((booking) => booking.id === selectedId) ?? visibleBookings[0],
@@ -92,10 +111,20 @@ export default function AdminPage() {
   );
   const arenaBookings = scheduleBookings.filter((booking) => arenaSportIds.has(booking.sportId));
   const scheduleRows = useMemo(() => {
-    const center = catalogQuery.data?.sportCenters[0];
+    const centers =
+      selectedCenterId === "all"
+        ? centerOptions
+        : centerOptions.filter((center) => center.id === selectedCenterId);
+    const showCenterName = centers.length > 1;
 
-    return buildScheduleRows(center, scheduleBookings, catalogQuery.data?.sports ?? []);
-  }, [catalogQuery.data?.sportCenters, catalogQuery.data?.sports, scheduleBookings]);
+    return centers.flatMap((center) =>
+      buildScheduleRows(center, scheduleBookings, catalogQuery.data?.sports ?? []).map((row) => ({
+        ...row,
+        id: `${center.id}-${row.id}`,
+        name: showCenterName ? `${center.name} · ${row.name}` : row.name,
+      })),
+    );
+  }, [catalogQuery.data?.sports, centerOptions, scheduleBookings, selectedCenterId]);
 
   useEffect(() => {
     if (meQuery.data?.user) {
@@ -257,27 +286,44 @@ export default function AdminPage() {
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0">
-          <div className="mb-5 inline-flex rounded-lg border border-neutral-800 bg-neutral-950/60 p-1">
-            <button
-              className={cn(
-                "inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-neutral-300 transition-colors",
-                activeView === "bookings" && "bg-primary text-primary-foreground",
-              )}
-              onClick={() => setActiveView("bookings")}
-            >
-              <Search className="h-4 w-4" />
-              {adminText.bookings}
-            </button>
-            <button
-              className={cn(
-                "inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-neutral-300 transition-colors",
-                activeView === "schedule" && "bg-primary text-primary-foreground",
-              )}
-              onClick={() => setActiveView("schedule")}
-            >
-              <Clock3 className="h-4 w-4" />
-              {adminText.schedule}
-            </button>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="inline-flex w-fit rounded-lg border border-neutral-800 bg-neutral-950/60 p-1">
+              <button
+                className={cn(
+                  "inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-neutral-300 transition-colors",
+                  activeView === "bookings" && "bg-primary text-primary-foreground",
+                )}
+                onClick={() => setActiveView("bookings")}
+              >
+                <Search className="h-4 w-4" />
+                {adminText.bookings}
+              </button>
+              <button
+                className={cn(
+                  "inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium text-neutral-300 transition-colors",
+                  activeView === "schedule" && "bg-primary text-primary-foreground",
+                )}
+                onClick={() => setActiveView("schedule")}
+              >
+                <Clock3 className="h-4 w-4" />
+                {adminText.schedule}
+              </button>
+            </div>
+            <div className="relative sm:min-w-64">
+              <select
+                className="h-11 w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950/60 py-0 pl-3 pr-9 text-sm font-medium text-neutral-100 outline-none transition-colors hover:bg-neutral-900 focus:border-primary"
+                value={selectedCenterId}
+                onChange={(event) => setSelectedCenterId(event.target.value)}
+              >
+                <option value="all">{adminText.all}</option>
+                {centerOptions.map((center) => (
+                  <option key={center.id} value={center.id}>
+                    {center.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-100" />
+            </div>
           </div>
 
           {activeView === "bookings" ? (
@@ -305,17 +351,20 @@ export default function AdminPage() {
                   />
                   <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-100" />
                 </div>
-                <select
-                  className="h-10 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100"
-                  value={filters.status}
-                  onChange={(event) =>
-                    setFilters((current) => ({ ...current, status: event.target.value }))
-                  }
-                >
-                  <option value="confirmed">{adminText.confirmed}</option>
-                  <option value="cancelled">{adminText.cancelled}</option>
-                  <option value="all">{adminText.all}</option>
-                </select>
+                <div className="relative sm:w-44">
+                  <select
+                    className="h-10 w-full appearance-none rounded-md border border-neutral-700 bg-neutral-950 py-0 pl-3 pr-9 text-sm text-neutral-100"
+                    value={filters.status}
+                    onChange={(event) =>
+                      setFilters((current) => ({ ...current, status: event.target.value }))
+                    }
+                  >
+                    <option value="confirmed">{adminText.confirmed}</option>
+                    <option value="cancelled">{adminText.cancelled}</option>
+                    <option value="all">{adminText.all}</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-100" />
+                </div>
                 <Button
                   className="border-neutral-700 bg-neutral-900 text-neutral-100 hover:bg-neutral-800"
                   onClick={() => bookingsQuery.refetch()}
@@ -435,7 +484,7 @@ export default function AdminPage() {
                           gridTemplateColumns: `${scheduleLabelWidth}px ${scheduleTimelineWidth}px`,
                         }}
                       >
-                        <div className="sticky left-0 z-10 flex min-h-[64px] items-center border-r border-neutral-800 bg-neutral-950 px-4 text-sm font-medium text-neutral-200">
+                        <div className="sticky left-0 z-30 flex min-h-[64px] items-center border-r border-neutral-800 bg-neutral-950 px-4 text-sm font-medium text-neutral-200 shadow-[8px_0_14px_-12px_rgba(0,0,0,0.85)]">
                           {row.name}
                         </div>
                         <div className="relative min-h-[64px] bg-neutral-950">
@@ -453,12 +502,18 @@ export default function AdminPage() {
                             ))}
                           </div>
                           {row.bookings.map((booking) => {
-                            const isArena = row.id === arenaRowId;
+                            const isArena = row.id === arenaRowId || row.id.endsWith(`-${arenaRowId}`);
+                            const sameCenterArenaBookings = arenaBookings.filter(
+                              (item) => item.centerId === booking.centerId,
+                            );
+                            const compactBooking =
+                              (isArena && getArenaCapacity(booking.sportId) <= 1) ||
+                              getScheduleWidthPixels(booking) < 80;
 
                             return (
                               <button
                                 className={cn(
-                                  "absolute z-10 overflow-hidden rounded-md border px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-lg transition-transform hover:scale-[1.01]",
+                                  "absolute z-10 flex items-center overflow-hidden rounded-md border px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-lg transition-transform hover:scale-[1.01]",
                                   selectedBooking?.id === booking.id
                                     ? "border-primary bg-primary text-primary-foreground"
                                     : "border-neutral-700 bg-neutral-800 text-neutral-100",
@@ -469,17 +524,26 @@ export default function AdminPage() {
                                   left: getScheduleLeft(booking),
                                   width: getScheduleWidth(booking),
                                   ...(isArena
-                                    ? getArenaLaneStyle(booking, arenaBookings)
+                                    ? getArenaLaneStyle(booking, sameCenterArenaBookings)
                                     : { top: "10%", height: "80%" }),
                                 }}
                                 title={`${booking.time} ${booking.name} - ${
                                   booking.resourceName || booking.sportName
                                 }`}
                               >
-                                <span className="flex min-w-0 items-center gap-1">
-                                  <span className="shrink-0 font-semibold">{booking.time}</span>
-                                  <span className="truncate">{booking.name}</span>
-                                </span>
+                                {compactBooking ? (
+                                  <span className="truncate">
+                                    <span className="font-semibold">{booking.time}</span>{" "}
+                                    {booking.name}
+                                  </span>
+                                ) : (
+                                  <span className="min-w-0">
+                                    <span className="block truncate font-semibold">
+                                      {booking.time}
+                                    </span>
+                                    <span className="block truncate">{booking.name}</span>
+                                  </span>
+                                )}
                               </button>
                             );
                           })}

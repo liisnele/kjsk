@@ -13,9 +13,11 @@ import {
   getArenaLaneStyle,
   getScheduleLeft,
   getScheduleWidth,
+  getScheduleWidthPixels,
   scheduleHours,
   scheduleTimelineWidth,
   scheduleHourWidth,
+  getArenaCapacity,
 } from "@/lib/schedule";
 import type { Booking } from "@/types/api";
 
@@ -188,11 +190,14 @@ export default function BookingCalendar() {
                                 {row.bookings.map((booking) => {
                                   const isArena = row.id === arenaRowId;
                                   const timeLabel = `${booking.time}-${bookingEndTime(booking)}`;
+                                  const compactBooking =
+                                    (isArena && getArenaCapacity(booking.sportId) <= 1) ||
+                                    getScheduleWidthPixels(booking) < 80;
 
                                   return (
                                     <div
                                       key={booking.id}
-                                      className="absolute z-10 overflow-hidden rounded-sm border border-destructive/40 bg-destructive/20 px-2 py-1 text-left text-[10px] font-semibold leading-tight text-destructive shadow-sm"
+                                      className="absolute z-10 flex items-center overflow-hidden rounded-sm border border-destructive/40 bg-destructive/20 px-2 py-0.5 text-left text-[10px] font-semibold leading-tight text-destructive shadow-sm"
                                       style={{
                                         left: getScheduleLeft(booking),
                                         width: getScheduleWidth(booking),
@@ -202,12 +207,21 @@ export default function BookingCalendar() {
                                       }}
                                       title={timeLabel}
                                     >
-                                      <span className="block truncate">
-                                        {t.calendar.booked}
-                                      </span>
-                                      <span className="block truncate font-medium opacity-90">
-                                        {timeLabel}
-                                      </span>
+                                      {compactBooking ? (
+                                        <span className="truncate">
+                                          {t.calendar.booked}{" "}
+                                          <span className="font-normal opacity-90">{timeLabel}</span>
+                                        </span>
+                                      ) : (
+                                        <span className="min-w-0">
+                                          <span className="block truncate">
+                                            {t.calendar.booked}
+                                          </span>
+                                          <span className="block truncate font-normal opacity-90">
+                                            {timeLabel}
+                                          </span>
+                                        </span>
+                                      )}
                                     </div>
                                   );
                                 })}

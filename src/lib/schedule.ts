@@ -75,11 +75,17 @@ export const getScheduleLeft = (booking: Pick<Booking, "time">) =>
 export const getScheduleWidth = (booking: Pick<Booking, "duration">) =>
   `${(Math.min(booking.duration, scheduleMinutes) / 60) * scheduleHourWidth}px`;
 
+export const getScheduleWidthPixels = (booking: Pick<Booking, "duration">) =>
+  (Math.min(booking.duration, scheduleMinutes) / 60) * scheduleHourWidth;
+
+export const getArenaCapacity = (sportId: string) =>
+  Math.min(4, Math.max(1, arenaCapacityBySportId[sportId] ?? 4));
+
 export const getArenaLaneStyle = <TBooking extends ScheduleBooking>(
   booking: TBooking,
   arenaBookings: TBooking[],
 ) => {
-  const capacity = arenaCapacityBySportId[booking.sportId] ?? 4;
+  const capacity = getArenaCapacity(booking.sportId);
   const sameTimeBookings = arenaBookings
     .filter((item) => item.date === booking.date && item.time === booking.time)
     .sort((a, b) => a.id.localeCompare(b.id));
@@ -87,13 +93,15 @@ export const getArenaLaneStyle = <TBooking extends ScheduleBooking>(
 
   for (const item of sameTimeBookings) {
     if (item.id === booking.id) break;
-    usedLanes += arenaCapacityBySportId[item.sportId] ?? 4;
+    usedLanes += getArenaCapacity(item.sportId);
   }
 
+  const laneTop = (Math.min(usedLanes, 4) / 4) * 100;
+  const laneHeight = (capacity / 4) * 100;
+
   return {
-    top: `${7 + usedLanes * 22}%`,
-    height: `${Math.max(22, capacity * 18)}%`,
-    maxHeight: "calc(100% - 10px)",
+    top: `calc(${laneTop}% + 2px)`,
+    height: `calc(${laneHeight}% - 4px)`,
   };
 };
 
